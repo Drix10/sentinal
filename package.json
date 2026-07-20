@@ -1,0 +1,24 @@
+{
+  "name": "sentinal",
+  "version": "1.0.0",
+  "description": "CLI tool for scanning repositories and reporting vulnerabilities",
+  "main": "dist/index.ts",
+  "scripts": {
+    "build": "node --check src/index.ts",
+    "start": "node src/index.ts",
+    "dev": "node --watch src/index.ts"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.21.0",
+    "axios": "^1.6.8",
+    "chalk": "^5.6.2",
+    "commander": "^15.0.0",
+    "dotenv": "^16.4.5",
+    "ora": "^9.4.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.1",
+    "tsx": "^4.23.1",
+    "typescript": "^7.0.2"
+  }
+}
