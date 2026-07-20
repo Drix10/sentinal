@@ -10,3 +10,9 @@ export interface ProjectInfo {
 
     sourceDirectory: string;
 }
+
+export interface RouteInfo {
+    method: string;
+    path: string;
+    file: string;
+}
