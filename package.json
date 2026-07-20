@@ -1,22 +1,42 @@
 {
   "name": "sentinel-ai-cli",
-  "version": "1.0.1",
-  "description": "CLI tool for scanning repositories and reporting vulnerabilities",
+  "version": "1.0.2",
+  "description": "AI-powered CLI that scans repositories and reports security vulnerabilities.",
   "main": "dist/index.js",
   "bin": {
     "sentinel": "./dist/index.js"
   },
-  "files": ["dist", "README.MD", "LINCENSE"],
-  "lincense": "MIT",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Drix10/sentinal.git"
+  },
+  "homepage": "https://github.com/Drix10/sentinal",
+  "bugs": {
+    "url": "https://github.com/Drix10/sentinal/issues"
+  },
   "keywords": [
     "ai",
     "security",
-    "cli"
+    "cli",
+    "cybersecurity",
+    "pentest",
+    "scanner",
+    "gemini",
+    "audit",
+    "vulnerability"
   ],
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "start": "tsx src/index.ts",
-    "build": "tsc"
+    "build": "tsc",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
