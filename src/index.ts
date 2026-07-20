@@ -14,8 +14,9 @@ program
 program
   .command("attack")
   .description("Analyze a project for security issues")
-  .action(async () => {
-    await attackCommand();
+  .action(async (target?: string) => {
+    const project = typeof target === "string" ? target : undefined;
+    await attackCommand(target);
   });
 
 program.parseAsync(process.argv);
