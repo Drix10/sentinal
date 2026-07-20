@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { getApiKey } from "../core/config";
 import { ProjectAnalysis } from "../types";
+import { prompt } from "./prompts";
 
 export async function generateSecurityReport(analysis: ProjectAnalysis) {
   const apiKey = getApiKey();
@@ -10,9 +11,9 @@ export async function generateSecurityReport(analysis: ProjectAnalysis) {
 
   const model = client.getGenerativeModel({ model: "gemini-3.5-flash" });
 
-  const prompt = `cyber secuity report on the codebase\n${JSON.stringify(analysis, null, 2)}`;
+  const finalprompt = `${prompt}\n${JSON.stringify(analysis, null, 2)}`;
 
-  const result = await model.generateContent(prompt);
+  const result = await model.generateContent(finalprompt);
 
   return result.response.text();
 }

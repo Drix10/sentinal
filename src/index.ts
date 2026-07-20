@@ -19,7 +19,7 @@ program
     await setGeminiKeyCommand();
   });
 program
-  .command("attack")
+  .command("attack [target]")
   .description("Analyze a project for security issues")
   .action(async (target?: string) => {
     const project = typeof target === "string" ? target : undefined;
