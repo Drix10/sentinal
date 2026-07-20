@@ -4,7 +4,7 @@ import { scanProject } from "../scanners/project";
 import { scanRoutes } from "../scanners/routes";
 import { scanDependencies } from "../scanners/dependencies";
 import { scanSecrets } from "../scanners/secrets";
-import { getApiKey } from "./config";
+import { generateSecurityReport } from "../ai/llm";
 
 function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -35,4 +35,16 @@ export async function runAttack(projectPath: string, spinner: Ora) {
   const secrets = await scanSecrets(projectPath);
   spinner.succeed(`Found ${secrets.length} potential secrets`);
   console.table(secrets.slice(0, 15)); //again to keep console clean
+
+  const analysis = {
+    project,
+    routes,
+    dependencies,
+    secrets,
+  };
+  spinner.start("Creating Security Report...");
+
+  const report = await generateSecurityReport(analysis);
+  spinner.succeed("Security report generated.");
+  console.log(report);
 }

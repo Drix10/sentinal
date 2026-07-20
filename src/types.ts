@@ -20,7 +20,7 @@ export interface RouteInfo {
 export interface DependencyInfo {
   name: string;
   version: string;
-  type: "dependency" | "devDependency"
+  type: "dependency" | "devDependency";
 }
 
 export interface SecretFinding {
@@ -28,4 +28,11 @@ export interface SecretFinding {
   value: string;
   file: string;
   line: number;
+}
+
+export interface ProjectAnalysis {
+  project: ProjectInfo;
+  routes: RouteInfo[];
+  dependencies: DependencyInfo[];
+  secrets: SecretFinding[];
 }
