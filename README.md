@@ -14,6 +14,10 @@ Fix: CLI tool which inspects and tests codebase
 ---
 
 Updates:
+
+[Prompt Enhancements](https://github.com/Drix10/sentinal/commit/2c9d3e119109bb41b6397b1e7b067724a4e75e4f)
+- Prompt with help of AI for the system, chalk rendering for issues
+
 [Prompt file setup and targeted attack system](https://github.com/Drix10/sentinal/commit/97504cf1994b06123bbc2bd6b2fd620054e6ed41)
 - Started writing the prompt to power this system and added target folder path analysis fixes
 

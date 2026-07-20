@@ -1,8 +1,18 @@
 {
-  "name": "sentinel",
+  "name": "sentinel-ai-cli",
   "version": "1.0.0",
   "description": "CLI tool for scanning repositories and reporting vulnerabilities",
-  "main": "dist/index.ts",
+  "main": "dist/index.js",
+  "bin": {
+    "sentinel": "./dist/index.js"
+  },
+  "files": ["dist", "README.MD", "LINCENSE"],
+  "lincense": "MIT",
+  "keywords": [
+    "ai",
+    "security",
+    "cli"
+  ],
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "start": "tsx src/index.ts",
