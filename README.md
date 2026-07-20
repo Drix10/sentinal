@@ -15,6 +15,9 @@ Fix: CLI tool which inspects and tests codebase
 
 Updates:
 
+[Used different Regex codes to find secrets outside the env in the codebase and implemented it](https://github.com/Drix10/sentinal/commit/46f833ffc11504c8c007899a6a0e8c8cdaa9ff0f)
+- Added Delays for better UI UX in the console and did the Secret finding system
+
 [Finished dependency finding system and integrated it](https://github.com/Drix10/sentinal/commit/54ce6dcdcd0bb8184f0bbeb8f3f94e7296d5c345)
 - Parse Package.json for all dev and normal dependencies
 
