@@ -3,6 +3,7 @@ import type { Ora } from "ora";
 import { scanProject } from "../scanners/project";
 import { scanRoutes } from "../scanners/routes";
 import { scanDependencies } from "../scanners/dependencies";
+import { scanSecrets } from "../scanners/secrets";
 
 function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -24,4 +25,9 @@ export async function runAttack(projectPath: string, spinner: Ora) {
   const dependencies = await scanDependencies(projectPath);
   spinner.succeed(`Found ${dependencies.length} dependencies`);
   console.table(dependencies.slice(0, 15)); //again to keep console clean
+
+  spinner.start("Scanning dependencies...");
+  const secrets = await scanSecrets(projectPath);
+  spinner.succeed(`Found ${secrets.length} potential secrets`);
+  console.table(secrets.slice(0, 15)); //again to keep console clean
 }
