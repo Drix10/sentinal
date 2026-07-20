@@ -15,6 +15,9 @@ Fix: CLI tool which inspects and tests codebase
 
 Updates:
 
+[Fix spelling Sentinal -> Sentinel]()
+- Fixed Spelling mistake, Started working on Gemini Key input system & removed unused files
+
 [Used different Regex codes to find secrets outside the env in the codebase and implemented it](https://github.com/Drix10/sentinal/commit/46f833ffc11504c8c007899a6a0e8c8cdaa9ff0f)
 - Added Delays for better UI UX in the console and did the Secret finding system
 

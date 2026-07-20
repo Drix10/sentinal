@@ -4,6 +4,7 @@ import { scanProject } from "../scanners/project";
 import { scanRoutes } from "../scanners/routes";
 import { scanDependencies } from "../scanners/dependencies";
 import { scanSecrets } from "../scanners/secrets";
+import { getApiKey } from "./config";
 
 function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
