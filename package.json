@@ -4,9 +4,9 @@
   "description": "CLI tool for scanning repositories and reporting vulnerabilities",
   "main": "dist/index.ts",
   "scripts": {
-    "build": "node --check src/index.ts",
-    "start": "node src/index.ts",
-    "dev": "node --watch src/index.ts"
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "build": "tsc"
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",

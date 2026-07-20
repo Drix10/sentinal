@@ -18,4 +18,4 @@ program
     await attackCommand();
   });
 
-  
+program.parseAsync(process.argv);
