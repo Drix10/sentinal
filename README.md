@@ -15,6 +15,9 @@ Fix: CLI tool which inspects and tests codebase
 
 Updates:
 
+[LLM implementation](https://github.com/Drix10/sentinal/commit/0bb5805a51df52cc50f6093e634452ecd645fc99)
+- Implemented Config System, Command to set Gemini API key, Implemented the base LLM setup with Gemini flash 3.5
+
 [Fix spelling Sentinal -> Sentinel]()
 - Fixed Spelling mistake, Started working on Gemini Key input system & removed unused files
 
