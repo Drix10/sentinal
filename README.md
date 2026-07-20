@@ -10,7 +10,7 @@
     <img src="https://img.shields.io/npm/v/sentinel-ai-cli?style=for-the-badge" />
     <img src="https://img.shields.io/npm/dm/sentinel-ai-cli?style=for-the-badge" />
     <img src="https://img.shields.io/badge/TypeScript-5.x-blue?style=for-the-badge" />
-    <img src="https://img.shields.io/badge/AI-Gemini_2.5_Flash-orange?style=for-the-badge" />
+    <img src="https://img.shields.io/badge/AI-Gemini_3.5_Flash-orange?style=for-the-badge" />
     <img src="https://img.shields.io/badge/Security-AI%20Powered-red?style=for-the-badge" />
     <img src="https://img.shields.io/github/license/Drix10/sentinal?style=for-the-badge" />
 </p>
@@ -208,46 +208,6 @@ Human Friendly Report
 ```
 
 This approach provides significantly better security reports than simply asking an LLM to "find vulnerabilities."
-
----
-
-# Current Capabilities
-
-* Project structure analysis
-* Framework detection
-* Route discovery
-* HTTP method extraction
-* Dependency parsing
-* Secret scanning
-* AI-powered vulnerability assessment
-* Colored terminal reports
-
----
-
-# Roadmap
-
-Planned features include:
-
-* CVE database integration
-* Dependency vulnerability lookup
-* Authentication flow tracing
-* Database attack analysis
-* Docker security analysis
-* Kubernetes support
-* JWT weakness detection
-* SSRF detection
-* IDOR detection
-* SQL Injection tracing
-* XSS analysis
-* GraphQL support
-* Multi-language support
-* PDF/HTML report generation
-* CI/CD integration
-* GitHub Actions support
-* Local LLM support
-* Incremental project scanning
-
----
 
 # Tech Stack
 
