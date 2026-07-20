@@ -5,7 +5,7 @@ import { attackCommand } from "./commands/attack";
 const program = new Command();
 
 program
-  .name("sentinal")
+  .name("sentinel")
   .description(
     "CLI tool for scanning repositories and reporting vulnerabilities",
   )

@@ -7,7 +7,7 @@ import { runAttack } from "../core/orchestrator";
 
 export async function attackCommand(target?: string) {
   console.clear();
-  console.log(chalk.red.bold(`SENTINAL`));
+  console.log(chalk.red.bold(`SENTINEL`));
 
   console.log(chalk.grey("AI Secuirty Review Agent\n"));
 

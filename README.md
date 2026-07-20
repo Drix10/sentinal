@@ -1,4 +1,4 @@
-# Sentinal Codebase
+# Sentinel Codebase
 
 ## CLI tool for scanning repositories and reporting vulnerabilities
 
@@ -6,7 +6,7 @@
 
 Cyber - 1
 
-Hack Yourself First - Sentinal
+Hack Yourself First - Sentinel
 
 Problem: Devs find issues after attacks
 Fix: CLI tool which inspects and tests codebase
