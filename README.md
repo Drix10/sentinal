@@ -91,6 +91,7 @@ This produces reports that are much closer to what a security engineer would wri
 # Installation
 
 ~~Install globally using npm~~
+
 **Will work after hackathon as code changes required, took permission from admin to do README update so i can update the situation -:**
 insteal of the package name, locally install the zip and use npm commands to: 
 - `npm run start -- attack`
