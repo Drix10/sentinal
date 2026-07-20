@@ -15,6 +15,9 @@ Fix: CLI tool which inspects and tests codebase
 
 Updates:
 
+[Finished dependency finding system and integrated it](https://github.com/Drix10/sentinal/commit/54ce6dcdcd0bb8184f0bbeb8f3f94e7296d5c345)
+- Parse Package.json for all dev and normal dependencies
+
 [Finished Routing system and implemented in Orchestation service](https://github.com/Drix10/sentinal/commit/8228a1d2cd3edacca743b8ae85e40eb959d1a6b9)
 - Used fast-glob and ts-morph to go through codebases to find routes in codebase & implemented the system in our orchestrator
 
