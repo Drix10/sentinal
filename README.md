@@ -14,6 +14,8 @@ Fix: CLI tool which inspects and tests codebase
 ---
 
 Updates:
+[Prompt file setup and targeted attack system](https://github.com/Drix10/sentinal/commit/97504cf1994b06123bbc2bd6b2fd620054e6ed41)
+- Started writing the prompt to power this system and added target folder path analysis fixes
 
 [LLM implementation](https://github.com/Drix10/sentinal/commit/0bb5805a51df52cc50f6093e634452ecd645fc99)
 - Implemented Config System, Command to set Gemini API key, Implemented the base LLM setup with Gemini flash 3.5

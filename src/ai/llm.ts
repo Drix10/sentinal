@@ -1,7 +1,8 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { getApiKey } from "../core/config";
 import { ProjectAnalysis } from "../types";
-import { prompt } from "./prompts";
+import { buildSecurityPrompt } from "./prompts";
+import chalk from "chalk";
 
 export async function generateSecurityReport(analysis: ProjectAnalysis) {
   const apiKey = getApiKey();
@@ -11,11 +12,18 @@ export async function generateSecurityReport(analysis: ProjectAnalysis) {
 
   const model = client.getGenerativeModel({ model: "gemini-3.5-flash" });
 
-  const finalprompt = `${prompt}\n${JSON.stringify(analysis, null, 2)}`;
+  let result = await model.generateContent(buildSecurityPrompt(analysis));
 
-  const result = await model.generateContent(finalprompt);
+  let report = result.response.text();
 
-  return result.response.text();
+  report = report
+    .replace(/\[CRITICAL\]/g, chalk.red.bold("🔴 CRITICAL"))
+    .replace(/\[HIGH\]/g, chalk.hex("#ff8800").bold("🟠 HIGH"))
+    .replace(/\[MEDIUM\]/g, chalk.yellow.bold("🟡 MEDIUM"))
+    .replace(/\[LOW\]/g, chalk.green.bold("🟢 LOW"))
+    .replace(/\[INFO\]/g, chalk.cyan.bold("🔵 INFO"));
+
+  return report;
 }
 
 export async function validateApiKey(apiKey: string): Promise<boolean> {
