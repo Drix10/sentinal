@@ -17,20 +17,32 @@ function ensureConfigDir() {
 
 export function saveApiKey(apiKey: string) {
   ensureConfigDir();
-
   const config: SentinelConfig = { geminiApiKey: apiKey };
-
-  fs.writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2), "utf8");
+  fs.writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2), {
+    encoding: "utf8",
+    mode: 0o600,
+  });
+  try {
+    fs.chmodSync(CONFIG_FILE, 0o600);
+  } catch {
+    // Ignore permissions error on systems where chmod is unmapped
+  }
 }
 
 export function getApiKey(): string | undefined {
+  if (process.env.GEMINI_API_KEY) return process.env.GEMINI_API_KEY;
+  if (process.env.GOOGLE_API_KEY) return process.env.GOOGLE_API_KEY;
+
   if (!fs.existsSync(CONFIG_FILE)) return undefined;
 
-  const config: SentinelConfig = JSON.parse(
-    fs.readFileSync(CONFIG_FILE, "utf8"),
-  );
-
-  return config.geminiApiKey;
+  try {
+    const config: SentinelConfig = JSON.parse(
+      fs.readFileSync(CONFIG_FILE, "utf8"),
+    );
+    return config.geminiApiKey;
+  } catch {
+    return undefined;
+  }
 }
 
 export function hasApiKey(): boolean {

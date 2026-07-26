@@ -9,11 +9,11 @@ export async function attackCommand(target?: string) {
   console.clear();
   console.log(chalk.red.bold(`SENTINEL`));
 
-  console.log(chalk.grey("AI Secuirty Review Agent\n"));
+  console.log(chalk.grey("AI Security Review Agent\n"));
 
   if (!hasApiKey()) {
     console.log(chalk.red("Gemini API Key not configured.\n"));
-    console.log(chalk.yellow("Run:\n\nsentinel config set-key\n"));
+    console.log(chalk.yellow("Run:\n\nsentinel set-key\n"));
     process.exit(1);
   }
 
@@ -30,8 +30,8 @@ export async function attackCommand(target?: string) {
     process.exit(1);
   }
 
-  if (!fs.statSync(projectPath).isDirectory) {
-    console.error(chalk.red(`Target is not a directory`));
+  if (!fs.statSync(projectPath).isDirectory()) {
+    console.error(chalk.red(`Target is not a directory: ${projectPath}`));
     process.exit(1);
   }
 
