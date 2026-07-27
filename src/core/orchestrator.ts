@@ -17,7 +17,11 @@ import {
   renderBox,
   renderIRSummary,
   renderGraphSummary,
+  renderNextSteps,
+  renderCustomTable,
 } from "../ui/render";
+
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export async function runAttack(projectPath: string, spinner: Ora) {
   const startTime = Date.now();
@@ -25,49 +29,63 @@ export async function runAttack(projectPath: string, spinner: Ora) {
   const knowledgeGraph = new KnowledgeGraph();
   const findingStore = new FindingStore();
 
+  findingStore.loadFromProject(normalizedProjectPath);
+
   eventBus.resetListeners();
 
   eventBus.onEvent("project:indexed", (p) => {
-    console.log(
-      colors.purple(` ⚡ [EVENT BUS] project:indexed -> Parsed ${p.project.files.size} source AST files`),
-    );
+    spinner.text = colors.purple(`Indexed ${p.project.files.size} source AST files`);
   });
 
   eventBus.onEvent("route:discovered", (r) => {
-    console.log(
-      colors.dim(` ⚡ [EVENT BUS] route:discovered -> ${r.route.method} ${r.route.path}`),
-    );
+    spinner.text = colors.dim(`Discovered route: ${r.route.method} ${r.route.path}`);
   });
 
   eventBus.onEvent("dependency:parsed", (d) => {
-    console.log(
-      colors.dim(` ⚡ [EVENT BUS] dependency:parsed -> Mapped ${d.dependencies.length} package nodes`),
-    );
+    spinner.text = colors.dim(`Mapped ${d.dependencies.length} package dependencies`);
   });
 
   eventBus.onEvent("secret:detected", (s) => {
-    console.log(
-      colors.critical(` ⚡ [EVENT BUS] secret:detected -> Exposing ${s.secret.type} @ ${s.secret.file}:${s.secret.line}`),
+    spinner.warn(
+      colors.critical(` Secret Detected: Exposing ${s.secret.type} @ ${s.secret.file}:${s.secret.line}`),
     );
+    spinner.start();
   });
 
   eventBus.onEvent("graph:knowledge_updated", (g) => {
-    console.log(
-      colors.brand(` ⚡ [EVENT BUS] graph:knowledge_updated -> Nodes: ${g.nodeCount}, Edges: ${g.edgeCount}`),
-    );
+    spinner.text = colors.brand(`Knowledge Graph: ${g.nodeCount} nodes, ${g.edgeCount} edges`);
   });
 
   eventBus.onEvent("graph:attack_generated", (a) => {
-    console.log(
-      colors.high(` ⚡ [EVENT BUS] graph:attack_generated -> Exploit Paths Synthesized: ${a.edgeCount}`),
+    spinner.warn(
+      colors.high(` Exploit Paths Synthesized: ${a.edgeCount} attack vectors`),
     );
+    spinner.start();
   });
 
   spinner.text = colors.brand(`Indexing repository: ${normalizedProjectPath}`);
   const project = await scanProject(normalizedProjectPath);
+  await delay(350);
   spinner.succeed(colors.low("Project Detected & Topology Analyzed"));
   console.log();
-  console.table(project);
+
+  renderCustomTable(
+    [
+      { key: "property", label: "PROPERTY", width: 22 },
+      { key: "value", label: "VALUE / METADATA", width: 49 },
+    ],
+    [
+      { property: "Project Name", value: project.name },
+      { property: "Framework", value: project.framework },
+      { property: "Language", value: project.language },
+      { property: "Package Manager", value: project.packageManager },
+      { property: "Source Directory", value: project.sourceDirectory },
+      { property: "Docker Configured", value: project.hasDocker ? "Yes" : "No" },
+      { property: "Env Configured", value: project.hasEnv ? "Yes" : "No" },
+    ],
+    colors.brand,
+  );
+  console.log();
 
   const tsPlugin = new TypeScriptPlugin(normalizedProjectPath);
   const irProject = await tsPlugin.parseProject(project.name);
@@ -110,16 +128,36 @@ export async function runAttack(projectPath: string, spinner: Ora) {
     }
   }
 
+  await delay(350);
   spinner.succeed(colors.low(`Discovered ${routes.length} HTTP API routes`));
   if (routes.length > 0) {
-    console.table(routes.slice(0, 10));
+    renderCustomTable(
+      [
+        { key: "method", label: "METHOD", width: 8 },
+        { key: "path", label: "ROUTE PATH", width: 38 },
+        { key: "file", label: "SOURCE FILE", width: 22 },
+      ],
+      routes.slice(0, 10),
+      colors.purple,
+    );
+    console.log();
   }
 
   spinner.start(colors.brand("Scanning project dependencies & SCA tree..."));
   const dependencies = await scanDependencies(normalizedProjectPath);
+  await delay(350);
   spinner.succeed(colors.low(`Found ${dependencies.length} package dependencies`));
   if (dependencies.length > 0) {
-    console.table(dependencies.slice(0, 15));
+    renderCustomTable(
+      [
+        { key: "name", label: "PACKAGE NAME", width: 36 },
+        { key: "version", label: "VERSION", width: 16 },
+        { key: "type", label: "SCOPE", width: 16 },
+      ],
+      dependencies.slice(0, 15),
+      colors.low,
+    );
+    console.log();
   }
   eventBus.emitEvent("dependency:parsed", { dependencies });
 
@@ -144,9 +182,19 @@ export async function runAttack(projectPath: string, spinner: Ora) {
 
   spinner.start(colors.brand("Scanning source code for exposed secrets..."));
   const secrets = await scanSecrets(normalizedProjectPath);
+  await delay(350);
   spinner.succeed(colors.low(`Found ${secrets.length} secret patterns`));
   if (secrets.length > 0) {
-    console.table(secrets.slice(0, 15));
+    renderCustomTable(
+      [
+        { key: "type", label: "SECRET TYPE", width: 24 },
+        { key: "value", label: "MASKED VALUE", width: 18 },
+        { key: "file", label: "FILE LOCATION", width: 26 },
+      ],
+      secrets.slice(0, 15),
+      colors.critical,
+    );
+    console.log();
   }
 
   for (const s of secrets) {
@@ -252,6 +300,7 @@ export async function runAttack(projectPath: string, spinner: Ora) {
 
   spinner.start(colors.brand("Synthesizing AI Security Audit Report..."));
   const reportData = await generateSecurityReport(analysis);
+  await delay(400);
   spinner.succeed(colors.low("Security Report Synthesized Successfully!"));
   console.log();
 
@@ -262,16 +311,20 @@ export async function runAttack(projectPath: string, spinner: Ora) {
         ? (sevUpper as FindingSeverity)
         : "MEDIUM";
 
+      const confRaw = typeof f.confidence === "number" ? f.confidence : 0.85;
+      const cleanConf = confRaw > 1 ? confRaw / 100 : confRaw;
+      const rawEvidenceFile = typeof f.evidence === "string" ? f.evidence : "package.json";
+
       findingStore.createFinding({
         ruleId: `AI-${(f.owaspCategory || "SECURITY").toUpperCase().replace(/[^A-Z0-9]/g, "_")}`,
         title: f.title || "AI Vulnerability Finding",
         severity: validSeverity,
-        confidence: typeof f.confidence === "number" ? f.confidence : 0.85,
+        confidence: cleanConf,
         owaspCategory: f.owaspCategory || "A05:2021-Security Misconfiguration",
         cweId: f.cweId || "CWE-200",
         description: `${f.whyDangerous || ""}\n\nAttack Scenario:\n${f.attackScenario || ""}`.trim(),
         evidence: {
-          file: f.evidence || "package.json",
+          file: rawEvidenceFile,
           line: 1,
         },
         recommendation: f.recommendation || "Review and secure configuration.",
@@ -279,15 +332,13 @@ export async function runAttack(projectPath: string, spinner: Ora) {
     }
   }
 
-  const savedFile = findingStore.saveToProject(normalizedProjectPath);
-
   console.log(renderScoreBadge(reportData.securityScore || 75));
-  renderBox("📋 EXECUTIVE SUMMARY", reportData.executiveSummary, colors.brand);
+  renderBox("[+] EXECUTIVE SUMMARY", reportData.executiveSummary, colors.brand);
   console.log();
 
   if (reportData.attackSurface && reportData.attackSurface.length > 0) {
     renderBox(
-      "🎯 ATTACK SURFACE DISCOVERED",
+      "[+] ATTACK SURFACE DISCOVERED",
       reportData.attackSurface.map((item: string, i: number) => `${i + 1}. ${item}`).join("\n"),
       colors.purple,
     );
@@ -295,7 +346,7 @@ export async function runAttack(projectPath: string, spinner: Ora) {
   }
 
   if (reportData.findings && reportData.findings.length > 0) {
-    console.log(colors.brand(" 🚨 IDENTIFIED VULNERABILITIES & ATTACK VECTORS:"));
+    console.log(colors.brand(" [+] IDENTIFIED VULNERABILITIES & ATTACK VECTORS:"));
     for (const f of reportData.findings) {
       const severityColor =
         f.severity === "CRITICAL"
@@ -306,9 +357,12 @@ export async function runAttack(projectPath: string, spinner: Ora) {
               ? colors.medium
               : colors.low;
 
+      const confRaw = typeof f.confidence === "number" ? f.confidence : 0.9;
+      const cleanConf = confRaw > 1 ? confRaw / 100 : confRaw;
+
       renderBox(
         `${severityColor(`[${f.severity}]`)} ${f.title}`,
-        `OWASP: ${f.owaspCategory}  |  Confidence: ${((f.confidence ?? 0.9) * 100).toFixed(0)}%\nWhy Dangerous: ${f.whyDangerous}\n\nAttack Scenario:\n${f.attackScenario}\n\nRecommendation:\n${f.recommendation}`,
+        `OWASP: ${f.owaspCategory}  |  Confidence: ${(cleanConf * 100).toFixed(0)}%\nWhy Dangerous: ${f.whyDangerous}\n\nAttack Scenario:\n${f.attackScenario}\n\nRecommendation:\n${f.recommendation}`,
         severityColor,
       );
       console.log();
@@ -317,7 +371,7 @@ export async function runAttack(projectPath: string, spinner: Ora) {
 
   if (reportData.recommendations && reportData.recommendations.length > 0) {
     renderBox(
-      "🚀 ORDERED RECOMMENDATIONS & REMEDIATION PRIORITIES",
+      "[+] ORDERED RECOMMENDATIONS & REMEDIATION PRIORITIES",
       reportData.recommendations.map((rec: string, i: number) => `${i + 1}. ${rec}`).join("\n"),
       colors.low,
     );
@@ -325,26 +379,39 @@ export async function runAttack(projectPath: string, spinner: Ora) {
   }
 
   const allFindings = findingStore.getAllFindings();
-  if (allFindings.length > 0) {
-    console.log(colors.brand(" 📋 FINDING LIFECYCLE STORE SUMMARY"));
-    console.table(
-      allFindings.map((f) => ({
-        "ID": f.id,
-        "Severity": f.severity,
-        "Title": f.title.slice(0, 45),
-        "Location": `${f.evidence.file}:${f.evidence.line}`,
-        "Confidence": `${(f.confidence * 100).toFixed(0)}%`,
-        "Status": f.status ?? "OPEN",
-      })),
-    );
+  let savedFile: string | undefined;
 
-    const firstId = allFindings[0].id;
-    console.log(colors.dim(` Findings persisted to: ${savedFile}`));
-    console.log(colors.brand("\n 💡 Developer Workflow Hints:"));
-    console.log(colors.white(`   sentinel explain ${firstId}    (View deep OWASP analysis & code evidence)`));
-    console.log(colors.white(`   sentinel fix ${firstId}        (Generate AI remediation patch)`));
-    console.log(colors.white(`   sentinel ignore ${firstId}     (Mark finding as ignored)\n`));
+  if (allFindings.length > 0) {
+    savedFile = findingStore.saveToProject(normalizedProjectPath);
+
+    console.log(colors.brand(" [+] FINDING LIFECYCLE STORE SUMMARY"));
+    renderCustomTable(
+      [
+        { key: "id", label: "ID", width: 13 },
+        { key: "severity", label: "SEVERITY", width: 10 },
+        { key: "title", label: "VULNERABILITY TITLE", width: 23 },
+        { key: "location", label: "LOCATION", width: 10 },
+        { key: "confidence", label: "CONF.", width: 6 },
+      ],
+      allFindings.map((f) => {
+        const rawFile = f.evidence.file || "package.json";
+        const truncatedFile = rawFile.length > 14 ? rawFile.slice(0, 11) + "..." : rawFile;
+        const conf = f.confidence > 1 ? f.confidence / 100 : f.confidence;
+        return {
+          id: f.id,
+          severity: f.severity,
+          title: f.title,
+          location: `${truncatedFile}:${f.evidence.line}`,
+          confidence: `${(conf * 100).toFixed(0)}%`,
+        };
+      }),
+      colors.brand,
+    );
+    console.log();
   }
+
+  const firstId = allFindings.length > 0 ? allFindings[0].id : undefined;
+  renderNextSteps(firstId, savedFile);
 
   eventBus.emitEvent("scan:completed", {
     findingCount: allFindings.length,

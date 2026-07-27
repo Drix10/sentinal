@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import { normalizePath } from "../utils/path";
 
 export type FindingSeverity = "CRITICAL" | "HIGH" | "MEDIUM" | "LOW" | "INFO";
 export type FindingStatus = "OPEN" | "IGNORED" | "FIXED";
@@ -41,10 +42,13 @@ export class FindingStore {
       status?: FindingStatus;
     },
   ): Finding {
+    const normalizedFile = normalizePath(data.evidence.file);
+
     const existing = Array.from(this.findings.values()).find(
       (f) =>
         f.ruleId === data.ruleId &&
-        f.evidence.file === data.evidence.file &&
+        f.title === data.title &&
+        normalizePath(f.evidence.file) === normalizedFile &&
         f.evidence.line === data.evidence.line,
     );
 
@@ -56,6 +60,10 @@ export class FindingStore {
 
     const finding: Finding = {
       ...data,
+      evidence: {
+        ...data.evidence,
+        file: normalizedFile,
+      },
       id,
       uuid,
       status: data.status || "OPEN",
@@ -111,6 +119,9 @@ export class FindingStore {
           }
           if (!item.status) {
             item.status = "OPEN";
+          }
+          if (item.evidence && item.evidence.file) {
+            item.evidence.file = normalizePath(item.evidence.file);
           }
           this.findings.set(item.id, item);
           const match = item.id.match(/^FINDING-(\d+)$/);
