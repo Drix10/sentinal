@@ -1,19 +1,16 @@
-import chalk from "chalk";
-import ora from "ora";
 import path from "node:path";
 import fs from "node:fs";
+import ora from "ora";
 import { hasApiKey } from "../core/config";
 import { runAttack } from "../core/orchestrator";
+import { colors, renderBanner } from "../ui/render";
 
 export async function attackCommand(target?: string) {
-  console.clear();
-  console.log(chalk.red.bold(`SENTINEL`));
-
-  console.log(chalk.grey("AI Security Review Agent\n"));
+  renderBanner();
 
   if (!hasApiKey()) {
-    console.log(chalk.red("Gemini API Key not configured.\n"));
-    console.log(chalk.yellow("Run:\n\nsentinel set-key\n"));
+    console.log(colors.critical(" ✖ Gemini API Key not configured.\n"));
+    console.log(colors.medium("   Run:\n\n   sentinel set-key\n"));
     process.exit(1);
   }
 
@@ -26,17 +23,17 @@ export async function attackCommand(target?: string) {
   }
 
   if (!fs.existsSync(projectPath)) {
-    console.error(chalk.red(`Directory not found: ${projectPath}`));
+    console.error(colors.critical(` ✖ Directory not found: ${projectPath}`));
     process.exit(1);
   }
 
   if (!fs.statSync(projectPath).isDirectory()) {
-    console.error(chalk.red(`Target is not a directory: ${projectPath}`));
+    console.error(colors.critical(` ✖ Target is not a directory: ${projectPath}`));
     process.exit(1);
   }
 
-  console.log(chalk.cyan(`Target: ${projectPath}\n`));
-  const spinner = ora("Starting attack analysis...").start();
+  console.log(colors.brand(` Target: ${projectPath}\n`));
+  const spinner = ora(colors.brand("Starting attack analysis pipeline...")).start();
 
   await runAttack(projectPath, spinner);
 }

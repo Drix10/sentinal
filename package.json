@@ -1,6 +1,6 @@
 {
   "name": "sentinel-ai-cli",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "AI-powered CLI that scans repositories and reports security vulnerabilities.",
   "main": "dist/index.js",
   "bin": {

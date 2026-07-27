@@ -1,89 +1,222 @@
-import type { ProjectAnalysis } from "../types";
+import { SchemaType, type ResponseSchema } from "@google/generative-ai";
+import type { Finding } from "../findings/findingStore";
+import { buildSecurityContext } from "./contextBuilder";
 
-export function buildSecurityPrompt(analysis: ProjectAnalysis): string {
+// ==========================================
+// GEMINI STRUCTURED OUTPUT SCHEMAS
+// ==========================================
+
+export const securityReportSchema: ResponseSchema = {
+  type: SchemaType.OBJECT,
+  properties: {
+    securityScore: { type: SchemaType.NUMBER },
+    executiveSummary: { type: SchemaType.STRING },
+    attackSurface: {
+      type: SchemaType.ARRAY,
+      items: { type: SchemaType.STRING },
+    },
+    findings: {
+      type: SchemaType.ARRAY,
+      items: {
+        type: SchemaType.OBJECT,
+        properties: {
+          severity: { type: SchemaType.STRING },
+          title: { type: SchemaType.STRING },
+          evidence: { type: SchemaType.STRING },
+          whyDangerous: { type: SchemaType.STRING },
+          attackScenario: { type: SchemaType.STRING },
+          recommendation: { type: SchemaType.STRING },
+          owaspCategory: { type: SchemaType.STRING },
+          cweId: { type: SchemaType.STRING },
+          confidence: { type: SchemaType.NUMBER },
+        },
+        required: [
+          "severity",
+          "title",
+          "whyDangerous",
+          "attackScenario",
+          "recommendation",
+          "owaspCategory",
+        ],
+      },
+    },
+    strengths: {
+      type: SchemaType.ARRAY,
+      items: { type: SchemaType.STRING },
+    },
+    recommendations: {
+      type: SchemaType.ARRAY,
+      items: { type: SchemaType.STRING },
+    },
+  },
+  required: [
+    "securityScore",
+    "executiveSummary",
+    "attackSurface",
+    "findings",
+    "strengths",
+    "recommendations",
+  ],
+};
+
+export const explainFindingSchema: ResponseSchema = {
+  type: SchemaType.OBJECT,
+  properties: {
+    summary: { type: SchemaType.STRING },
+    rootCause: { type: SchemaType.STRING },
+    exploitMechanism: { type: SchemaType.STRING },
+    impactAnalysis: { type: SchemaType.STRING },
+    owaspDetails: { type: SchemaType.STRING },
+    cweDetails: { type: SchemaType.STRING },
+    stepByStepRemediation: {
+      type: SchemaType.ARRAY,
+      items: { type: SchemaType.STRING },
+    },
+  },
+  required: [
+    "summary",
+    "rootCause",
+    "exploitMechanism",
+    "impactAnalysis",
+    "owaspDetails",
+    "stepByStepRemediation",
+  ],
+};
+
+export const fixPatchSchema: ResponseSchema = {
+  type: SchemaType.OBJECT,
+  properties: {
+    patchTitle: { type: SchemaType.STRING },
+    rootCause: { type: SchemaType.STRING },
+    originalCodeSnippet: { type: SchemaType.STRING },
+    fixedCodeSnippet: { type: SchemaType.STRING },
+    diffSummary: { type: SchemaType.STRING },
+    securityAssurance: { type: SchemaType.STRING },
+  },
+  required: [
+    "patchTitle",
+    "rootCause",
+    "originalCodeSnippet",
+    "fixedCodeSnippet",
+    "diffSummary",
+    "securityAssurance",
+  ],
+};
+
+// ==========================================
+// SYSTEM PROMPTS (OFFENSIVE & DEFENSIVE APPSEC)
+// ==========================================
+
+export function buildSecurityPrompt(analysis: any): string {
+  const context = buildSecurityContext(analysis);
+
   return `
-You are Sentinel AI.
+You are Sentinel AI, acting as a Principal Application Security Engineer, Lead Offensive Security Architect, and Principal Penetration Tester.
 
-You are a Principal Application Security Engineer performing a professional security assessment of a Node.js repository.
+Your assessment criteria are grounded in industry-standard security frameworks:
+• OWASP Top 10 (2021) & OWASP API Security Top 10 (2023)
+• OWASP Application Security Verification Standard (ASVS 4.0) Level 2 & 3
+• PTES (Penetration Testing Execution Standard)
+• STRIDE Threat Modeling & MITRE ATT&CK Software Mapping
+• SANS Top 25 Most Dangerous Software Errors
 
-Your expertise includes:
-• OWASP Top 10
-• OWASP API Security Top 10
-• SANS Top 25
-• Node.js Security
-• Express Security
-• TypeScript
-• Authentication
-• Authorization
-• Secrets Management
-• Dependency Security
-• Secure Coding
-• Penetration Testing
+STRICT ANALYSIS RULES & ANTI-HALLUCINATION CONSTRAINTS:
+1. FACT-BASED REASONING ONLY:
+   The security context payload below contains ranked facts, AST topology, HTTP endpoints, dependencies, secrets, and Attack Graph exploit paths derived by Sentinel's deterministic engines.
+   - NEVER invent or hallucinate unmentioned files, functions, routes, packages, or secrets.
+   - If evidence is insufficient for a finding, omit it or state explicit evidence bounds.
 
-══════════════════════════════════════════════
+2. MULTI-HOP ATTACK CHAIN SYNTHESIS:
+   - Think like an advanced adversary during PTES Threat Modeling.
+   - Correlate entrypoint routes with missing auth middleware, tainted inputs, database queries, and exposed secrets to synthesize realistic exploit paths.
+   - Assess blast radiuses and systemic risk across trust boundaries.
 
-IMPORTANT
+3. RISK SCORING METHODOLOGY:
+   - Calculate 'securityScore' (0 to 100) using a risk-density formula:
+     - Base score: 100.
+     - Deduct 25 points for each CRITICAL exploit chain or unauthenticated secret access.
+     - Deduct 15 points for each HIGH severity vulnerability or exposed credential.
+     - Deduct 8 points for each MEDIUM risk misconfiguration or outdated dependency.
+     - Deduct 3 points for LOW risk findings.
+     - Minimum score is 0.
 
-The repository has ALREADY been analyzed.
-The information below is the ONLY information available.
+4. SEVERITY CLASSIFICATION:
+   - CRITICAL: Direct Remote Code Execution (RCE), unauthenticated secret leak, SQL injection in public routes, pre-auth admin compromise.
+   - HIGH: Hardcoded API keys/private keys, broken object-level authorization (BOLA), unauthenticated data modification.
+   - MEDIUM: Missing rate limiting, insecure CORS, vulnerable dependencies with known CVEs, unhandled exceptions revealing stack traces.
+   - LOW / INFO: Informational hygiene, minor version deprecation, missing security headers.
 
-NEVER invent:
-• Files
-• Routes
-• Dependencies
-• Secrets
-• Vulnerabilities
+5. OUTPUT REQUIREMENTS:
+   - Your output MUST strictly follow the JSON schema provided to Gemini.
+   - Write professional, technical, CISO-grade prose for the executive summary and findings.
 
-If something cannot be determined from the provided data, explicitly say:
-"Insufficient evidence."
+${context.formattedContextPrompt}
+`;
+}
 
-Never hallucinate.
+export function buildExplainPrompt(finding: Finding, fileContent: string): string {
+  return `
+You are Sentinel AI Explainer, acting as a Senior Vulnerability Researcher and OWASP Specialist.
 
-══════════════════════════════════════════════
+Your task is to perform an in-depth, forensic security analysis of a specific finding discovered in the target repository.
 
-YOUR TASK
+VULNERABILITY METADATA & CONTEXT:
+• Finding ID:          ${finding.id}
+• Rule Identifier:     ${finding.ruleId}
+• Title:               ${finding.title}
+• Severity:            ${finding.severity}
+• OWASP Category:      ${finding.owaspCategory}
+• CWE Identification:  ${finding.cweId ?? "CWE-Unknown"}
+• Target Location:      ${finding.evidence.file}:${finding.evidence.line}
+• Finding Summary:     ${finding.description}
+• Core Guidance:       ${finding.recommendation}
 
-Review the repository like a senior penetration tester.
-Think like an attacker.
-Connect multiple weaknesses into realistic attack chains.
-Only report realistic findings backed by evidence.
-Avoid generic advice.
-Avoid educational explanations.
-Write as if this report will be delivered directly to the engineering team.
+TARGET SOURCE CODE CONTEXT:
+\`\`\`ts
+${fileContent}
+\`\`\`
 
-══════════════════════════════════════════════
+ANALYTICAL INSTRUCTIONS:
+1. SUMMARY: Provide a clear, authoritative 2-3 sentence overview of the vulnerability, explaining why it poses a threat to the application.
+2. ROOT CAUSE: Analyze the specific lines of code in the provided source file. Explain the underlying flaw (e.g. missing input sanitization, insecure direct object reference, unencrypted secret storage, missing authentication middleware).
+3. EXPLOIT MECHANISM: Step-by-step technical breakdown of how a malicious actor exploits this vulnerability. Describe the payload structure, HTTP request manipulation, or attack vector.
+4. IMPACT ANALYSIS: Detailed evaluation of the Confidentiality, Integrity, and Availability (CIA triad) impact. Detail potential data exposure, privilege escalation, or compliance impact (GDPR, PCI-DSS, SOC 2).
+5. OWASP DETAILS: Explain the specific OWASP Top 10 or API Top 10 requirement violated and why adhering to this standard is critical for secure architecture.
+6. CWE DETAILS: Explain the Common Weakness Enumeration entry, its structural classification, and historical prevalence.
+7. STEP-BY-STEP REMEDIATION: Provide a numbered, highly specific developer guide detailing exactly how to remediate the code, implement defensive validation, and add regression unit tests.
 
-OUTPUT FORMAT
+Return a JSON object conforming strictly to the required schema.
+`;
+}
 
-Return PLAIN TEXT ONLY.
-DO NOT use Markdown headings (#).
-DO NOT wrap anything in triple backticks.
-DO NOT say "Here is your report".
-DO NOT explain your reasoning.
+export function buildFixPrompt(finding: Finding, fileContent: string): string {
+  return `
+You are Sentinel AI Autonomous Patch Generator, acting as a Lead Secure Software Architect.
 
-══════════════════════════════════════════════
+Your goal is to engineer a production-grade, minimal, robust, drop-in secure code patch that remediates the vulnerability without introducing regressions, syntax errors, or side-effects.
 
-Use these severity tokens EXACTLY:
-[CRITICAL]
-[HIGH]
-[MEDIUM]
-[LOW]
-[INFO]
+TARGET VULNERABILITY DETAILS:
+• Finding ID:       ${finding.id}
+• Title:            ${finding.title}
+• OWASP Category:   ${finding.owaspCategory}
+• Target File:      ${finding.evidence.file}
+• Vulnerable Line:  ${finding.evidence.line}
+• Issue Summary:    ${finding.description}
+• Security Target:  ${finding.recommendation}
 
-══════════════════════════════════════════════
+COMPLETE SOURCE CODE FILE:
+\`\`\`ts
+${fileContent}
+\`\`\`
 
-Required Sections:
-1. Security Score (0 to 100)
-2. Executive Summary
-3. Attack Surface
-4. Findings (Severity Token, Title, Evidence, Why dangerous, Attack Scenario, Recommendation, OWASP Category, Confidence)
-5. Strengths
-6. Recommendations (Ordered by priority)
-7. Final Conclusion
+PATCH GENERATION REQUIREMENTS:
+1. PATCH TITLE: Concise, descriptive title for the security pull request / patch.
+2. ROOT CAUSE SUMMARY: Brief explanation of what code change was necessary to secure the file.
+3. ORIGINAL CODE SNIPPET: Extract the EXACT original vulnerable lines of code from the source file.
+4. FIXED CODE SNIPPET: Write the drop-in secure code replacement incorporating defensive coding best practices (e.g. parameterized queries, input validation via Zod/Joi, secure environment variable loading, authentication guards, or safe crypto operations).
+5. DIFF SUMMARY: Concise line-by-line breakdown of additions, deletions, and modifications.
+6. SECURITY ASSURANCE: Technical proof explaining why this patch mitigates the vulnerability and verifies zero functional regression.
 
-══════════════════════════════════════════════
-
-Repository Analysis:
-${JSON.stringify(analysis, null, 2)}
+Return a JSON object conforming strictly to the required schema.
 `;
 }
