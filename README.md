@@ -12,7 +12,7 @@
     <img src="https://img.shields.io/badge/TypeScript-5.x-blue?style=for-the-badge" />
     <img src="https://img.shields.io/badge/AI-Gemini_3.5_Flash-orange?style=for-the-badge" />
     <img src="https://img.shields.io/badge/Security-AI%20Powered-red?style=for-the-badge" />
-    <img src="https://img.shields.io/github/license/Drix10/sentinal?style=for-the-badge" />
+    <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" />
 </p>
 
 <p align="center">
@@ -29,52 +29,6 @@
 
 ```
 Polyglot Source Code ──► Sentinel IR ──► Security Knowledge Graph ──► Attack Graph ──► Security Context Builder ──► Verified AI Reasoning (Gemini 3.5 Flash) ──► Actionable Remediation
-```
-
----
-
-## ✨ Codebase Subsystems & Architecture
-
-Sentinel is organized cleanly under `src/` into decoupled domain modules:
-
-```
-src/
-├── index.ts               # CLI Shebang Entrypoint (Commander command registrations)
-├── types.ts               # Shared Data Models (ProjectInfo, RouteInfo, DependencyInfo, SecretFinding)
-├── ai/
-│   ├── contextBuilder.ts  # Security Context Builder (Evidence Ranker & Context Payload Generator)
-│   ├── llm.ts             # Structured Gemini AI Client (Gemini 3.5 Flash with 3.0 Flash fallback)
-│   └── prompts.ts         # CISO-Grade System Prompts & Gemini JSON Response Schemas
-├── commands/
-│   ├── attack.ts          # Action handler for 'sentinel attack [target]'
-│   ├── explain.ts         # Action handler for 'sentinel explain <findingId>'
-│   ├── fix.ts             # Action handler for 'sentinel fix <findingId>'
-│   ├── ignore.ts          # Action handler for 'sentinel ignore <findingId>'
-│   └── set-key.ts         # Action handler for 'sentinel set-key'
-├── core/
-│   ├── config.ts          # Configuration & API Key storage (~/.sentinel/config.json)
-│   └── orchestrator.ts    # Pipeline Orchestrator (Coordinates IR, Events, Graph, Context & UI)
-├── events/
-│   └── eventBus.ts        # Typed SentinelEventBus for real-time telemetry streaming
-├── findings/
-│   └── findingStore.ts    # Finding Lifecycle Store with disk persistence (.sentinel/findings.json)
-├── graph/
-│   ├── knowledgeGraph.ts  # Topology Fact Store (Routes, Secrets, Dependencies)
-│   └── attackGraph.ts     # BFS Multi-Hop Attack Graph Exploit Path Generator
-├── ir/
-│   └── types.ts           # Sentinel Intermediate Representation Spec (IRProject, IRFile, IRRoute)
-├── plugins/
-│   └── typescript.ts      # Polyglot Language AST Compiler (@sentinel/plugin-typescript)
-├── rules/
-│   ├── project.ts         # Project metadata & framework detector
-│   ├── dependencies.ts    # SCA Dependency Scanner
-│   ├── routeParser.ts     # Shared AST Route Expression Extractor
-│   ├── routes.ts          # API Route Finder
-│   └── secrets.ts         # Regex Secret Scanner with Masking (AIza****X9Z)
-├── ui/
-│   └── render.ts          # High-Contrast Terminal UI (ANSI length fixing, Score Badges, Matrix Cards, Diffs)
-└── utils/
-    └── path.ts            # OS Path Normalization (Windows backslashes to POSIX forward slashes)
 ```
 
 ---
@@ -160,41 +114,99 @@ sentinel ignore FINDING-100 --reason "Mitigated by upstream Cloudflare WAF rule"
 
 ```text
  ╔══════════════════════════════════════════════════════════════════════╗
- ║  🛡️   S E N T I N E L   A I   S E C U R I T Y   P L A T F O R M   ║
+ ║      S E N T I N E L   A I   S E C U R I T Y   P L A T F O R M       ║
  ║      Deterministic Program Analysis • Attack Graph • AI Reasoning    ║
  ╚══════════════════════════════════════════════════════════════════════╝
 
- ⚡ [EVENT BUS] project:indexed -> Parsed 14 source AST files
- ┌── 🧩 SENTINEL IR COMPILER METRICS (@sentinel/plugin-typescript) ──┐
- │  IR Project Compilation: Successful                              │
- │  AST Source Files Parsed: 14                                      │
- │  Extracted API Routes: 14                                         │
- └───────────────────────────────────────────────────────────────────┘
+ Target: /path/to/target-repo
 
- ⚡ [EVENT BUS] graph:knowledge_updated -> Nodes: 11, Edges: 2
- ┌── 🕸️ KNOWLEDGE GRAPH & ATTACK GRAPH ENGINE MATRIX ───────────────┐
- │  Knowledge Graph Nodes: 11 (Routes, Secrets, Dependencies)         │
- │  Topology Edges: 2 (USES_DEPENDENCY, READS_SECRET)                │
- │  Synthesized Exploit Paths: 1 Attack Graph Vectors                │
- └───────────────────────────────────────────────────────────────────┘
+✔ Project Detected & Topology Analyzed
 
- ┌──────────────────────────────────────────────────────────────────────┐
- │  SECURITY RISK SCORE: 85/100   [█████████████████████████░░░░]     │
- │  STATUS: GOOD SECURITY POSTURE                                      │
- └──────────────────────────────────────────────────────────────────────┘
+┌────────────────────────┬───────────────────────────────────────────────────┐
+│ PROPERTY               │ VALUE / METADATA                                  │
+├────────────────────────┼───────────────────────────────────────────────────┤
+│ Project Name           │ my-app-backend                                    │
+│ Framework              │ Express                                           │
+│ Language               │ TypeScript                                        │
+│ Package Manager        │ npm                                               │
+│ Source Directory       │ src                                               │
+│ Docker Configured      │ No                                                │
+│ Env Configured         │ Yes                                               │
+└────────────────────────┴───────────────────────────────────────────────────┘
 
- 📋 FINDING LIFECYCLE STORE SUMMARY
- ┌─────────┬───────────────┬──────────┬─────────────────────────────┬──────────────┬────────────┬────────┐
- │ (index) │ ID            │ Severity │ Title                       │ Location     │ Confidence │ Status │
- ├─────────┼───────────────┼──────────┼─────────────────────────────┼──────────────┼────────────┼────────┤
- │ 0       │ 'FINDING-100' │ 'HIGH'   │ 'Potential Command Inject'  │ 'index.ts:1' │ '95%'      │ 'OPEN' │
- └─────────┴───────────────┴──────────┴─────────────────────────────┴──────────────┴────────────┴────────┘
- Findings persisted to: .sentinel/findings.json
+┌── [+] SENTINEL IR COMPILER METRICS (@sentinel/plugin-typescript) ──────────┐
+│ IR Project Compilation: Successful                                         │
+│ AST Source Files Parsed: 32                                                │
+│ Extracted API Routes: 32                                                   │
+│ AST Node Processing: TypeScript Morph Plugin Active                        │
+└────────────────────────────────────────────────────────────────────────────┘
 
- 💡 Developer Workflow Hints:
-   sentinel explain FINDING-100    (View deep OWASP analysis & code evidence)
-   sentinel fix FINDING-100        (Generate AI remediation patch)
-   sentinel ignore FINDING-100     (Mark finding as ignored)
+✔ Discovered 44 HTTP API routes
+┌────────┬──────────────────────────────────────┬────────────────────────────┐
+│ METHOD │ ROUTE PATH                           │ SOURCE FILE                │
+├────────┼──────────────────────────────────────┼────────────────────────────┤
+│ GET    │ /health                              │ src/index.ts               │
+│ POST   │ /analyze                             │ src/routes/ai-mrv.routes.ts│
+│ POST   │ /login                               │ src/routes/auth.routes.ts  │
+└────────┴──────────────────────────────────────┴────────────────────────────┘
+
+✔ Found 43 package dependencies
+┌──────────────────────────────────────┬──────────────────┬──────────────────┐
+│ PACKAGE NAME                         │ VERSION          │ SCOPE            │
+├──────────────────────────────────────┼──────────────────┼──────────────────┤
+│ @google/generative-ai                │ 0.21.0           │ dependency       │
+│ express                              │ 4.18.2           │ dependency       │
+└──────────────────────────────────────┴──────────────────┴──────────────────┘
+
+✔ Found 0 secret patterns
+┌── [+] KNOWLEDGE GRAPH & ATTACK GRAPH ENGINE MATRIX ────────────────────────┐
+│ Knowledge Graph Nodes: 112 (Routes, Secrets, Dependencies)                 │
+│ Topology Edges: 2992 (USES_DEPENDENCY, READS_SECRET)                       │
+│ Synthesized Exploit Paths: 0 Attack Graph Vectors                          │
+└────────────────────────────────────────────────────────────────────────────┘
+
+✔ Security Report Synthesized Successfully!
+
+ ┌──────────────────────────────────────────────────────────────────────────┐
+ │  SECURITY RISK SCORE: 95/100   [█████████████████████████████░]          │
+ │  STATUS: GOOD SECURITY POSTURE                                           │
+ └──────────────────────────────────────────────────────────────────────────┘
+
+┌── [+] EXECUTIVE SUMMARY ───────────────────────────────────────────────────┐
+│ The security assessment of the target project reveals a robust baseline    │
+│ posture. Sentinel's engines detected zero active multi-hop attack graph    │
+│ exploit vectors and no exposed hardcoded secrets.                          │
+└────────────────────────────────────────────────────────────────────────────┘
+
+┌── [+] ATTACK SURFACE DISCOVERED ───────────────────────────────────────────┐
+│ 1. 44 HTTP API endpoints                                                   │
+│ 2. 43 runtime dependencies                                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+
+ [+] FINDING LIFECYCLE STORE SUMMARY
+┌───────────────┬────────────┬─────────────────────────┬────────────┬────────┐
+│ ID            │ SEVERITY   │ VULNERABILITY TITLE     │ LOCATION   │ CONF.  │
+├───────────────┼────────────┼─────────────────────────┼────────────┼────────┤
+│ FINDING-100   │ LOW        │ Outdated AWS SDK Maj... │ Depende... │ 90%    │
+└───────────────┴────────────┴─────────────────────────┴────────────┴────────┘
+
+┌── [+] NEXT STEPS & ACTION PLAN ────────────────────────────────────────────┐
+│ DEVELOPER REMEDIATION WORKFLOW & NEXT STEPS:                               │
+│                                                                            │
+│  1. Examine OWASP Details & Source Evidence:                               │
+│     sentinel explain FINDING-100                                           │
+│                                                                            │
+│  2. Synthesize Autonomous AI Security Patch:                               │
+│     sentinel fix FINDING-100                                               │
+│                                                                            │
+│  3. Triage False Positives or Accept Risk:                                 │
+│     sentinel ignore FINDING-100 --reason "Reviewed by AppSec team"         │
+│                                                                            │
+│  4. Re-verify Code Base After Remediation:                                 │
+│     sentinel attack .                                                      │
+│                                                                            │
+│  Findings persisted to: .sentinel/findings.json                            │
+└────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -205,34 +217,6 @@ sentinel ignore FINDING-100 --reason "Mitigated by upstream Cloudflare WAF rule"
 - **AST Compiler & IR**: `ts-morph`, `fast-glob`
 - **AI Reasoning Engine**: `@google/generative-ai` (`gemini-3.5-flash` with `gemini-3.0-flash` fallback)
 - **CLI Framework & UI**: `commander`, `chalk`, `ora`
-
----
-
-## 📅 Development Timeline & Hackathon Changelog
-
-### Cyber - 1
-**Hack Yourself First - Sentinel**
-- **Problem:** Developers often discover critical security vulnerabilities only after an exploit occurs in production.
-- **Solution:** An intelligent CLI application security platform that compiles code topology into IR, indexes Knowledge & Attack Graphs, and applies AI reasoning to fix vulnerabilities before release.
-
-### Commits & Architecture Milestones
-
-- **Shebang & Executable Binary Fix (`v1.0.3`)**: Added `#!/usr/bin/env node` executable shebang header for global npm CLI execution across OS environments.
-- **Security Context Builder**: [`src/ai/contextBuilder.ts`](file:///c:/Users/ggdri/Downloads/NYC-R2-Sentinal/src/ai/contextBuilder.ts) for evidence ranking, risk density scoring, and token-optimized prompt synthesis.
-- **Gemini 3.5 Flash Structured AI Outputs**: Gemini `ResponseSchema` integration for `securityReportSchema`, `explainFindingSchema`, and `fixPatchSchema`.
-- **Finding Store & Disk Persistence**: [commit 8228a1d] Persistent `.sentinel/findings.json` finding IDs (`FINDING-100`).
-- **Knowledge & Attack Graph Engine**: [commit cfae39d] BFS graph traversal for multi-hop exploit paths.
-- **Typed Event Bus**: [commit 97504cf] `SentinelEventBus` real-time telemetry stream.
-- **Regex Secret Detection**: [commit 46f833f] Secret scanner with string masking (`AIza****X9Z`).
-- **Dependency Analysis**: [commit 54ce6dc] Package dependencies scanner.
-- **TypeScript Plugin & IR**: [commit 8228a1d] `ts-morph` AST parser to Sentinel IR.
-
----
-
-## 🎨 Planning & Design Architecture
-
-- **Architecture Design Board**: [Excalidraw Design Diagram](https://excalidraw.com/#json=kq_rwMbVvmfWpQSZq_WgP,IRqJiWOEifxpliKZP8KB8g)
-- **Engineering Blueprint**: [`plan.md`](file:///c:/Users/ggdri/Downloads/NYC-R2-Sentinal/plan.md)
 
 ---
 
