@@ -11,8 +11,8 @@ const program = new Command();
 
 program
   .name("sentinel")
-  .description("Sentinel Platform CLI for security scanning, AI reasoning, and patch generation")
-  .version("1.0.3");
+  .description("Sentinel Platform CLI for security scanning, AI reasoning, and zero-breakage autonomous patching")
+  .version("1.0.6");
 
 program
   .command("set-key")
@@ -37,9 +37,11 @@ program
 
 program
   .command("fix <findingId>")
-  .description("Generate autonomous AI remediation patch for a finding")
-  .action(async (findingId: string) => {
-    await fixCommand(findingId);
+  .description("Generate and apply autonomous AI remediation patch with zero-breakage verification")
+  .option("--dry-run", "Preview AI patch diff without physically modifying disk files")
+  .option("--no-verify", "Skip compiler and test runner verification pipeline")
+  .action(async (findingId: string, options: { dryRun?: boolean; verify?: boolean }) => {
+    await fixCommand(findingId, options);
   });
 
 program

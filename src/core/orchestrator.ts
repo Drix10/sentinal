@@ -1,3 +1,5 @@
+import fs from "node:fs";
+import path from "node:path";
 import chalk from "chalk";
 import type { Ora } from "ora";
 import { scanProject } from "../rules/project";
@@ -313,7 +315,36 @@ export async function runAttack(projectPath: string, spinner: Ora) {
 
       const confRaw = typeof f.confidence === "number" ? f.confidence : 0.85;
       const cleanConf = confRaw > 1 ? confRaw / 100 : confRaw;
-      const rawEvidenceFile = typeof f.evidence === "string" ? f.evidence : "package.json";
+
+      // Filter out low-confidence AI noise (confidence < 0.50)
+      if (cleanConf < 0.50) {
+        continue;
+      }
+
+      let rawEvidenceFile = typeof f.evidence === "string" ? f.evidence : "package.json";
+      const fileMatch = rawEvidenceFile.match(/\b([a-zA-Z0-9_\-\/\.]+\.(?:json|tsx|jsx|yaml|env|yml|ts|js|md))\b/i);
+      if (fileMatch) {
+        rawEvidenceFile = fileMatch[1];
+      } else if (!fs.existsSync(path.resolve(normalizedProjectPath, rawEvidenceFile))) {
+        rawEvidenceFile = "package.json";
+      }
+
+      let lineNum = 1;
+      const absEvidenceFile = path.resolve(normalizedProjectPath, rawEvidenceFile);
+      if (fs.existsSync(absEvidenceFile)) {
+        try {
+          const fileLines = fs.readFileSync(absEvidenceFile, "utf8").split("\n");
+          const searchKey = f.title || f.owaspCategory || "";
+          const foundIdx = fileLines.findIndex((line) =>
+            searchKey.split(" ").some((word: string) => word.length > 4 && line.toLowerCase().includes(word.toLowerCase())),
+          );
+          if (foundIdx !== -1) {
+            lineNum = foundIdx + 1;
+          }
+        } catch {
+          // Default to line 1
+        }
+      }
 
       findingStore.createFinding({
         ruleId: `AI-${(f.owaspCategory || "SECURITY").toUpperCase().replace(/[^A-Z0-9]/g, "_")}`,
@@ -325,7 +356,7 @@ export async function runAttack(projectPath: string, spinner: Ora) {
         description: `${f.whyDangerous || ""}\n\nAttack Scenario:\n${f.attackScenario || ""}`.trim(),
         evidence: {
           file: rawEvidenceFile,
-          line: 1,
+          line: lineNum,
         },
         recommendation: f.recommendation || "Review and secure configuration.",
       });

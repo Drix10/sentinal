@@ -1,6 +1,4 @@
-import path from "node:path";
-import fg from "fast-glob";
-import { Project, SyntaxKind, type SourceFile } from "ts-morph";
+import { SyntaxKind, type SourceFile } from "ts-morph";
 import { normalizePath } from "../utils/path";
 
 export const HTTP_METHODS = [
@@ -71,46 +69,6 @@ export function extractRoutesFromSource(
       startLine: call.getStartLineNumber(),
       endLine: call.getEndLineNumber(),
     });
-  }
-
-  return routes;
-}
-
-export async function scanRoutesShared(
-  projectPath: string,
-): Promise<ExtractedRoute[]> {
-  const files = await fg(
-    ["**/*.ts", "**/*.js", "**/*.tsx", "**/*.jsx", "**/*.mjs", "**/*.cjs"],
-    {
-      cwd: projectPath,
-      absolute: true,
-      ignore: ["**/node_modules/**", "**/dist/**", "**/build/**", "**/.next/**"],
-    },
-  );
-
-  if (files.length === 0) return [];
-
-  const project = new Project({
-    compilerOptions: { allowJs: true },
-    skipAddingFilesFromTsConfig: true,
-  });
-
-  const routes: ExtractedRoute[] = [];
-
-  for (const file of files) {
-    let source: SourceFile | undefined;
-    try {
-      const relPath = normalizePath(path.relative(projectPath, file));
-      source = project.addSourceFileAtPath(file);
-      const extracted = extractRoutesFromSource(source, relPath);
-      routes.push(...extracted);
-    } catch {
-      // Ignore unparseable individual files gracefully
-    } finally {
-      if (source) {
-        project.removeSourceFile(source);
-      }
-    }
   }
 
   return routes;

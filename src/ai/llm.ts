@@ -25,12 +25,23 @@ function isModelUnavailableError(err: any): boolean {
 }
 
 function parseJsonResponse(text: string): any {
-  const cleaned = text
+  let cleaned = text
     .replace(/^```json\s*/i, "")
     .replace(/^```\s*/i, "")
     .replace(/\s*```$/i, "")
     .trim();
-  return JSON.parse(cleaned);
+
+  try {
+    return JSON.parse(cleaned);
+  } catch (err) {
+    const firstBrace = cleaned.search(/[\{\[]/);
+    const lastBrace = Math.max(cleaned.lastIndexOf("}"), cleaned.lastIndexOf("]"));
+    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+      const jsonSub = cleaned.substring(firstBrace, lastBrace + 1);
+      return JSON.parse(jsonSub);
+    }
+    throw err;
+  }
 }
 
 async function invokeStructuredGemini(
@@ -84,16 +95,19 @@ export async function generateSecurityReport(analysis: any): Promise<any> {
 export async function generateExplainReport(
   finding: Finding,
   fileContent: string,
+  deepContextText?: string,
 ): Promise<any> {
-  const prompt = buildExplainPrompt(finding, fileContent);
+  const prompt = buildExplainPrompt(finding, fileContent, deepContextText);
   return invokeStructuredGemini(prompt, explainFindingSchema);
 }
 
 export async function generateFixReport(
   finding: Finding,
   fileContent: string,
+  deepContextText?: string,
+  errorFeedback?: string,
 ): Promise<any> {
-  const prompt = buildFixPrompt(finding, fileContent);
+  const prompt = buildFixPrompt(finding, fileContent, deepContextText, errorFeedback);
   return invokeStructuredGemini(prompt, fixPatchSchema);
 }
 

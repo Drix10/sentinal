@@ -88,19 +88,17 @@ export async function scanSecrets(
 
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
+        const lowerLine = line.toLowerCase();
+        if (IGNORE_SUBSTRINGS.some((sub) => lowerLine.includes(sub))) {
+          continue;
+        }
 
         for (const pattern of PATTERNS) {
-          pattern.regex.lastIndex = 0;
-          const matches = line.match(pattern.regex);
-          if (!matches) continue;
-
-          for (const match of matches) {
-            const lowerLine = line.toLowerCase();
-            if (IGNORE_SUBSTRINGS.some((sub) => lowerLine.includes(sub))) {
-              continue;
-            }
-
-            const masked = maskSecret(match);
+          const re = new RegExp(pattern.regex.source, "g");
+          let match: RegExpExecArray | null;
+          while ((match = re.exec(line)) !== null) {
+            const rawMatch = match[1] || match[0];
+            const masked = maskSecret(rawMatch);
             const duplicate = findings.some(
               (f) =>
                 f.file === relPath && f.line === i + 1 && f.type === pattern.type,

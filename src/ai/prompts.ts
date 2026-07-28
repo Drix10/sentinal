@@ -154,7 +154,11 @@ ${context.formattedContextPrompt}
 `;
 }
 
-export function buildExplainPrompt(finding: Finding, fileContent: string): string {
+export function buildExplainPrompt(
+  finding: Finding,
+  fileContent: string,
+  deepContextText?: string,
+): string {
   return `
 You are Sentinel AI Explainer, acting as a Senior Vulnerability Researcher and OWASP Specialist.
 
@@ -170,6 +174,8 @@ VULNERABILITY METADATA & CONTEXT:
 • Target Location:      ${finding.evidence.file}:${finding.evidence.line}
 • Finding Summary:     ${finding.description}
 • Core Guidance:       ${finding.recommendation}
+
+${deepContextText ? `DEEP REPOSITORY & MULTI-FILE CODEBASE CONTEXT:\n${deepContextText}\n` : ""}
 
 TARGET SOURCE CODE CONTEXT:
 \`\`\`ts
@@ -189,7 +195,12 @@ Return a JSON object conforming strictly to the required schema.
 `;
 }
 
-export function buildFixPrompt(finding: Finding, fileContent: string): string {
+export function buildFixPrompt(
+  finding: Finding,
+  fileContent: string,
+  deepContextText?: string,
+  errorFeedback?: string,
+): string {
   return `
 You are Sentinel AI Autonomous Patch Generator, acting as a Lead Secure Software Architect.
 
@@ -204,6 +215,16 @@ TARGET VULNERABILITY DETAILS:
 • Issue Summary:    ${finding.description}
 • Security Target:  ${finding.recommendation}
 
+${deepContextText ? `DEEP REPOSITORY & MULTI-FILE CODEBASE CONTEXT:\n${deepContextText}\n` : ""}
+${
+  errorFeedback
+    ? `⚠️ PREVIOUS PATCH VERIFICATION ATTEMPT FAILED WITH THE FOLLOWING COMPILER / TEST ERROR:
+${errorFeedback}
+You MUST fix your patch so that it compiles cleanly and passes tests without this error!
+`
+    : ""
+}
+
 COMPLETE SOURCE CODE FILE:
 \`\`\`ts
 ${fileContent}
@@ -212,8 +233,8 @@ ${fileContent}
 PATCH GENERATION REQUIREMENTS:
 1. PATCH TITLE: Concise, descriptive title for the security pull request / patch.
 2. ROOT CAUSE SUMMARY: Brief explanation of what code change was necessary to secure the file.
-3. ORIGINAL CODE SNIPPET: Extract the EXACT original vulnerable lines of code from the source file.
-4. FIXED CODE SNIPPET: Write the drop-in secure code replacement incorporating defensive coding best practices (e.g. parameterized queries, input validation via Zod/Joi, secure environment variable loading, authentication guards, or safe crypto operations).
+3. ORIGINAL CODE SNIPPET: Extract the EXACT original vulnerable lines of code from the source file. Ensure exact indentation and character matching.
+4. FIXED CODE SNIPPET: Write the drop-in secure code replacement incorporating defensive coding best practices (e.g. parameterized queries, input validation, secure environment variable loading, authentication guards, or safe crypto operations). Do NOT add uninstalled third-party package imports.
 5. DIFF SUMMARY: Concise line-by-line breakdown of additions, deletions, and modifications.
 6. SECURITY ASSURANCE: Technical proof explaining why this patch mitigates the vulnerability and verifies zero functional regression.
 

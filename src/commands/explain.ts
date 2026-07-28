@@ -4,6 +4,7 @@ import path from "node:path";
 import fs from "node:fs";
 import { FindingStore } from "../findings/findingStore";
 import { generateExplainReport } from "../ai/llm";
+import { extractDeepCodebaseContext } from "../ai/codebaseContext";
 import { colors, renderBanner, renderBox } from "../ui/render";
 
 export async function explainCommand(findingId?: string) {
@@ -42,10 +43,15 @@ export async function explainCommand(findingId?: string) {
     }
   }
 
-  const spinner = ora(colors.brand(`Analyzing finding ${finding.id} with AI reasoning...`)).start();
+  const deepContext = extractDeepCodebaseContext(projectPath, finding.evidence.file);
+  const spinner = ora(colors.brand(`Analyzing finding ${finding.id} with deep AI reasoning...`)).start();
 
   try {
-    const explainData = await generateExplainReport(finding, fileContent);
+    const explainData = await generateExplainReport(
+      finding,
+      fileContent,
+      deepContext.formattedContext,
+    );
     spinner.succeed(colors.low(`Vulnerability explanation synthesized for ${finding.id}`));
     console.log();
 

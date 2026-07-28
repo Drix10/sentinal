@@ -49,7 +49,8 @@ export class FindingStore {
         f.ruleId === data.ruleId &&
         f.title === data.title &&
         normalizePath(f.evidence.file) === normalizedFile &&
-        f.evidence.line === data.evidence.line,
+        f.evidence.line === data.evidence.line &&
+        f.description.trim() === data.description.trim(),
     );
 
     if (existing) return existing;
@@ -121,7 +122,14 @@ export class FindingStore {
             item.status = "OPEN";
           }
           if (item.evidence && item.evidence.file) {
-            item.evidence.file = normalizePath(item.evidence.file);
+            let rawFile = item.evidence.file;
+            const fileMatch = rawFile.match(/\b([a-zA-Z0-9_\-\/\.]+\.(?:json|tsx|jsx|yaml|env|yml|ts|js|md))\b/i);
+            if (fileMatch) {
+              rawFile = fileMatch[1];
+            } else if (!fs.existsSync(path.resolve(projectPath, rawFile))) {
+              rawFile = "package.json";
+            }
+            item.evidence.file = normalizePath(rawFile);
           }
           this.findings.set(item.id, item);
           const match = item.id.match(/^FINDING-(\d+)$/);

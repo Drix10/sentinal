@@ -16,19 +16,19 @@
 </p>
 
 <p align="center">
-  <b>Application Security Platform combining Deterministic AST Parsing, Knowledge/Attack Graphs, Security Context Building, and Gemini 3.5 Flash AI Reasoning.</b>
+  <b>Application Security Platform combining Deterministic AST Parsing, Knowledge/Attack Graphs, Multi-File Codebase Context, Gemini 3.5 Flash AI Reasoning, and Zero-Breakage Autonomous Patching.</b>
 </p>
 
 ---
 
 ## ⚡ Why Sentinel?
 
-> Traditional security tools rely solely on regex pattern matching or unguided text prompts that trigger high false-positive rates.
+> Traditional security tools rely solely on superficial regex pattern matching or unguided text prompts that trigger high false-positive rates and corrupt source files when attempting fixes.
 
-> **Sentinel first compiles your code into Sentinel IR, maps your application topology into a Knowledge Graph, synthesizes multi-hop Attack Graphs, ranks evidence via a Security Context Builder, and performs CISO-grade reasoning powered by Gemini 3.5 Flash.**
+> **Sentinel compiles your codebase into Sentinel IR, builds a Knowledge Graph, synthesizes multi-hop Attack Graphs, extracts deep multi-file codebase context (interfaces, exports, dependencies), performs CISO-grade reasoning powered by Gemini 3.5 Flash, and applies autonomous fixes backed by zero-breakage verification and snapshot rollback.**
 
 ```
-Polyglot Source Code ──► Sentinel IR ──► Security Knowledge Graph ──► Attack Graph ──► Security Context Builder ──► Verified AI Reasoning (Gemini 3.5 Flash) ──► Actionable Remediation
+Polyglot Source Code ──► Sentinel IR ──► Security Knowledge Graph ──► Attack Graph ──► Deep Multi-File Context ──► Gemini 3.5 Flash Reasoning ──► Autonomous Patching & Zero-Breakage Verification
 ```
 
 ---
@@ -75,7 +75,7 @@ Sentinel validates the key and securely saves it locally to `~/.sentinel/config.
 
 ## 💻 CLI Commands & Workflow
 
-### 1. Execute Security Scan & Attack Graph Synthesis
+### 1. Execute Security Scan & Attack Graph Synthesis (`sentinel attack`)
 
 Analyze current directory:
 ```bash
@@ -94,12 +94,25 @@ View forensic root-cause analysis, exploit mechanics, CIA triad impact, OWASP de
 sentinel explain FINDING-100
 ```
 
-### 3. Generate Autonomous AI Patch (`sentinel fix`)
+### 3. Autonomous AI Patching & Verification (`sentinel fix`)
 
-Generate a drop-in secure code diff patch and automatically update finding status to `FIXED`:
+Synthesize a drop-in secure code patch with deep codebase awareness and run automated **zero-breakage verification** (AST diagnostics, `tsc` compilation, test runner execution, and detector re-scans) before finalizing the fix:
+
 ```bash
 sentinel fix FINDING-100
 ```
+
+#### Preview Diff Without Modifying Disk (`--dry-run`):
+```bash
+sentinel fix FINDING-100 --dry-run
+```
+
+#### Skip Compiler/Test Verification (`--no-verify`):
+```bash
+sentinel fix FINDING-100 --no-verify
+```
+
+> 🛡️ **Zero-Breakage Guarantee:** If a patch introduces compilation or test regressions, Sentinel automatically invokes AI self-correction retry, and restores the pre-patch snapshot from `.sentinel/backups/` if verification fails.
 
 ### 4. Ignore Finding (`sentinel ignore`)
 
