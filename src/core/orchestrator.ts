@@ -12,6 +12,7 @@ import { AttackGraphEngine } from "../graph/attackGraph";
 import { FindingStore, type FindingSeverity } from "../findings/findingStore";
 import { eventBus } from "../events/eventBus";
 import type { RouteInfo } from "../types";
+import { generateSarifReport } from "../reporters/sarifReporter";
 import { normalizePath } from "../utils/path";
 import {
   colors,
@@ -25,7 +26,7 @@ import {
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-export async function runAttack(projectPath: string, spinner: Ora) {
+export async function runAttack(projectPath: string, spinner: Ora, options?: { format?: string; output?: string }) {
   const startTime = Date.now();
   const normalizedProjectPath = normalizePath(projectPath);
   const knowledgeGraph = new KnowledgeGraph();
@@ -443,6 +444,25 @@ export async function runAttack(projectPath: string, spinner: Ora) {
 
   const firstId = allFindings.length > 0 ? allFindings[0].id : undefined;
   renderNextSteps(firstId, savedFile);
+
+  // SARIF / JSON Export Handling
+  if (options?.format && options.format !== "table") {
+    const outPath = options.output
+      ? path.resolve(normalizedProjectPath, options.output)
+      : path.join(normalizedProjectPath, `.sentinel/report.${options.format}`);
+    const parentDir = path.dirname(outPath);
+    if (!fs.existsSync(parentDir)) {
+      fs.mkdirSync(parentDir, { recursive: true });
+    }
+    if (options.format === "sarif") {
+      const sarifData = generateSarifReport(allFindings, normalizedProjectPath);
+      fs.writeFileSync(outPath, JSON.stringify(sarifData, null, 2), "utf8");
+      console.log(colors.low(` ✔ SARIF 2.1.0 security report saved to: ${outPath}`));
+    } else if (options.format === "json") {
+      fs.writeFileSync(outPath, JSON.stringify(allFindings, null, 2), "utf8");
+      console.log(colors.low(` ✔ JSON security findings saved to: ${outPath}`));
+    }
+  }
 
   eventBus.emitEvent("scan:completed", {
     findingCount: allFindings.length,

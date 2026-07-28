@@ -82,19 +82,31 @@ Analyze current directory:
 sentinel attack .
 ```
 
-Analyze a target repository folder:
+Export GitHub-compatible **SARIF 2.1.0** report for GitHub Code Scanning / Security Tab:
 ```bash
-sentinel attack /path/to/target-repo
+sentinel attack . --format sarif --output sentinel-report.sarif
 ```
 
-### 2. Deep Finding Explanation (`sentinel explain`)
+Export JSON format report:
+```bash
+sentinel attack . --format json --output sentinel-report.json
+```
+
+### 2. System Diagnostic Check (`sentinel doctor`)
+
+Run environment, Node.js version, TSConfig, and Gemini API key diagnostics:
+```bash
+sentinel doctor
+```
+
+### 3. Deep Finding Explanation (`sentinel explain`)
 
 View forensic root-cause analysis, exploit mechanics, CIA triad impact, OWASP details, and step-by-step developer remediation:
 ```bash
 sentinel explain FINDING-100
 ```
 
-### 3. Autonomous AI Patching & Verification (`sentinel fix`)
+### 4. Autonomous AI Patching & Verification (`sentinel fix`)
 
 Synthesize a drop-in secure code patch with deep codebase awareness and run automated **zero-breakage verification** (AST diagnostics, `tsc` compilation, test runner execution, and detector re-scans) before finalizing the fix:
 
@@ -114,7 +126,7 @@ sentinel fix FINDING-100 --no-verify
 
 > 🛡️ **Zero-Breakage Guarantee:** If a patch introduces compilation or test regressions, Sentinel automatically invokes AI self-correction retry, and restores the pre-patch snapshot from `.sentinel/backups/` if verification fails.
 
-### 4. Ignore Finding (`sentinel ignore`)
+### 5. Ignore Finding (`sentinel ignore`)
 
 Mark a finding as ignored with an optional developer justification reason:
 ```bash
