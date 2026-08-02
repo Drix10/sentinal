@@ -1,5 +1,5 @@
 import { SyntaxKind, type SourceFile } from "ts-morph";
-import { normalizePath } from "../utils/path";
+import { normalizePath } from "../utils/path.js";
 
 export const HTTP_METHODS = [
   "get",

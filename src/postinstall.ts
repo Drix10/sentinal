@@ -9,7 +9,7 @@ function printPostInstallBanner() {
   console.log(
     cyan(`
  ╔══════════════════════════════════════════════════════════════════════╗
- ║      S E N T I N E L   A I   S E C U R I T Y   P L A T F O R M       ║
+ ║         S E N T I N E L   A I   S E C U R I T Y   C L I              ║
  ║      Deterministic Program Analysis • Attack Graph • AI Reasoning    ║
  ╚══════════════════════════════════════════════════════════════════════╝
 `),
@@ -34,5 +34,4 @@ function printPostInstallBanner() {
 try {
   printPostInstallBanner();
 } catch {
-  // Silent catch if installed in restricted stdout environments
 }

@@ -2,18 +2,19 @@ import fs from "node:fs";
 import path from "node:path";
 import chalk from "chalk";
 import type { Ora } from "ora";
-import { scanProject } from "../rules/project";
-import { scanDependencies } from "../rules/dependencies";
-import { scanSecrets } from "../rules/secrets";
-import { generateSecurityReport } from "../ai/llm";
-import { TypeScriptPlugin } from "../plugins/typescript";
-import { KnowledgeGraph } from "../graph/knowledgeGraph";
-import { AttackGraphEngine } from "../graph/attackGraph";
-import { FindingStore, type FindingSeverity } from "../findings/findingStore";
-import { eventBus } from "../events/eventBus";
-import type { RouteInfo } from "../types";
-import { generateSarifReport } from "../reporters/sarifReporter";
-import { normalizePath } from "../utils/path";
+import { scanProject } from "../rules/project.js";
+import { scanDependencies } from "../rules/dependencies.js";
+import { scanSecrets } from "../rules/secrets.js";
+import { generateSecurityReport } from "../ai/llm.js";
+import { TypeScriptPlugin } from "../plugins/typescript.js";
+import { KnowledgeGraph } from "../graph/knowledgeGraph.js";
+import { AttackGraphEngine } from "../graph/attackGraph.js";
+import { FindingStore, type FindingSeverity } from "../findings/findingStore.js";
+import { eventBus } from "../events/eventBus.js";
+import type { RouteInfo } from "../types.js";
+import { generateSarifReport } from "../reporters/sarifReporter.js";
+import { normalizePath, validateProjectRelativePath } from "../utils/path.js";
+import { animateAiSynthesis, animateScoreGauge } from "../ui/animation.js";
 import {
   colors,
   renderScoreBadge,
@@ -22,7 +23,7 @@ import {
   renderGraphSummary,
   renderNextSteps,
   renderCustomTable,
-} from "../ui/render";
+} from "../ui/render.js";
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -301,11 +302,9 @@ export async function runAttack(projectPath: string, spinner: Ora, options?: { f
     exploitPaths,
   };
 
-  spinner.start(colors.brand("Synthesizing AI Security Audit Report..."));
-  const reportData = await generateSecurityReport(analysis);
-  await delay(400);
-  spinner.succeed(colors.low("Security Report Synthesized Successfully!"));
-  console.log();
+  const reportData = await animateAiSynthesis("Synthesizing AI Security Audit Report...", () =>
+    generateSecurityReport(analysis),
+  );
 
   if (reportData.findings && Array.isArray(reportData.findings)) {
     for (const f of reportData.findings) {
@@ -317,18 +316,12 @@ export async function runAttack(projectPath: string, spinner: Ora, options?: { f
       const confRaw = typeof f.confidence === "number" ? f.confidence : 0.85;
       const cleanConf = confRaw > 1 ? confRaw / 100 : confRaw;
 
-      // Filter out low-confidence AI noise (confidence < 0.50)
       if (cleanConf < 0.50) {
         continue;
       }
 
-      let rawEvidenceFile = typeof f.evidence === "string" ? f.evidence : "package.json";
-      const fileMatch = rawEvidenceFile.match(/\b([a-zA-Z0-9_\-\/\.]+\.(?:json|tsx|jsx|yaml|env|yml|ts|js|md))\b/i);
-      if (fileMatch) {
-        rawEvidenceFile = fileMatch[1];
-      } else if (!fs.existsSync(path.resolve(normalizedProjectPath, rawEvidenceFile))) {
-        rawEvidenceFile = "package.json";
-      }
+      const rawInput = typeof f.evidence === "string" ? f.evidence : (f.evidence?.file || "package.json");
+      const rawEvidenceFile = validateProjectRelativePath(normalizedProjectPath, rawInput);
 
       let lineNum = 1;
       const absEvidenceFile = path.resolve(normalizedProjectPath, rawEvidenceFile);
@@ -343,7 +336,6 @@ export async function runAttack(projectPath: string, spinner: Ora, options?: { f
             lineNum = foundIdx + 1;
           }
         } catch {
-          // Default to line 1
         }
       }
 
@@ -364,7 +356,7 @@ export async function runAttack(projectPath: string, spinner: Ora, options?: { f
     }
   }
 
-  console.log(renderScoreBadge(reportData.securityScore || 75));
+  await animateScoreGauge(reportData.securityScore || 75);
   renderBox("[+] EXECUTIVE SUMMARY", reportData.executiveSummary, colors.brand);
   console.log();
 
@@ -445,7 +437,6 @@ export async function runAttack(projectPath: string, spinner: Ora, options?: { f
   const firstId = allFindings.length > 0 ? allFindings[0].id : undefined;
   renderNextSteps(firstId, savedFile);
 
-  // SARIF / JSON Export Handling
   if (options?.format && options.format !== "table") {
     const outPath = options.output
       ? path.resolve(normalizedProjectPath, options.output)

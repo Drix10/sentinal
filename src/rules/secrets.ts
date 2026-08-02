@@ -1,8 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import fg from "fast-glob";
-import type { SecretFinding } from "../types";
-import { normalizePath } from "../utils/path";
+import type { SecretFinding } from "../types.js";
+import { normalizePath } from "../utils/path.js";
 
 function maskSecret(value: string): string {
   if (!value || value.length <= 8) return "********";
@@ -116,7 +116,6 @@ export async function scanSecrets(
         }
       }
     } catch {
-      // Ignore unparseable or unreadable individual files gracefully
     }
   }
 

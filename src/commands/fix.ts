@@ -1,13 +1,14 @@
 import ora from "ora";
 import path from "node:path";
 import fs from "node:fs";
-import { FindingStore } from "../findings/findingStore";
-import { hasApiKey } from "../core/config";
-import { generateFixReport } from "../ai/llm";
-import { extractDeepCodebaseContext } from "../ai/codebaseContext";
-import { applyPatch, cleanBackup, restoreBackup } from "../core/patchApplier";
-import { verifyPatchSafety } from "../core/verificationEngine";
-import { colors, renderBanner, renderBox, renderDiff } from "../ui/render";
+import { FindingStore } from "../findings/findingStore.js";
+import { hasApiKey } from "../core/config.js";
+import { generateFixReport } from "../ai/llm.js";
+import { extractDeepCodebaseContext } from "../ai/codebaseContext.js";
+import { applyPatch, cleanBackup, restoreBackup } from "../core/patchApplier.js";
+import { verifyPatchSafety } from "../core/verificationEngine.js";
+import { colors, renderBanner, renderBox, renderDiff } from "../ui/render.js";
+import { animateBanner, animateAiSynthesis } from "../ui/animation.js";
 
 export interface FixCommandOptions {
   dryRun?: boolean;
@@ -18,7 +19,7 @@ export async function fixCommand(
   findingId?: string,
   options: FixCommandOptions = { dryRun: false, verify: true },
 ) {
-  renderBanner();
+  await animateBanner();
 
   if (!findingId) {
     console.log(colors.critical(" ✖ Error: Finding ID required."));
@@ -54,15 +55,11 @@ export async function fixCommand(
 
   const deepContext = extractDeepCodebaseContext(projectPath, finding.evidence.file);
 
-  const spinner = ora(colors.brand(`Extracting deep context & synthesizing AI patch for ${finding.id}...`)).start();
-
   try {
-    let fixData = await generateFixReport(
-      finding,
-      deepContext.targetFileContent,
-      deepContext.formattedContext,
+    let fixData = await animateAiSynthesis(
+      `Extracting deep context & synthesizing AI patch for ${finding.id}...`,
+      () => generateFixReport(finding, deepContext.targetFileContent, deepContext.formattedContext),
     );
-    spinner.succeed(colors.low(`Autonomous security patch synthesized with deep codebase awareness!`));
     console.log();
 
     renderBox(
@@ -85,7 +82,6 @@ export async function fixCommand(
       return;
     }
 
-    // Physical Patch Application
     const patchResult = applyPatch(
       projectPath,
       finding.evidence.file,
@@ -103,7 +99,6 @@ export async function fixCommand(
 
     let activeBackupPath = patchResult.backupPath;
 
-    // Zero-Breakage Verification Pipeline
     if (options.verify !== false) {
       const vSpinner = ora(colors.brand("Running zero-breakage verification pipeline (syntax, tsc, tests)...")).start();
       let verifyResult = await verifyPatchSafety(projectPath, finding.evidence.file);
@@ -112,7 +107,6 @@ export async function fixCommand(
         vSpinner.warn(colors.high(`Initial patch failed verification [Stage: ${verifyResult.stage.toUpperCase()}]`));
         console.log(colors.medium(`   Reason: ${verifyResult.message}`));
 
-        // Attempt 1: AI Self-Correction Retry
         const retrySpinner = ora(colors.purple("Attempting AI self-correction retry with compiler error trace...")).start();
         try {
           const retriedFixData = await generateFixReport(
@@ -122,7 +116,6 @@ export async function fixCommand(
             verifyResult.errorLog || verifyResult.message,
           );
 
-          // Restore initial backup before applying retry patch
           if (activeBackupPath) {
             restoreBackup(targetFilePath, activeBackupPath);
           }
@@ -175,7 +168,6 @@ export async function fixCommand(
 
     console.log(colors.low(`\n ✔ Finding ${finding.id} status updated to FIXED in .sentinel/findings.json\n`));
   } catch (err: any) {
-    spinner.fail(colors.critical("Failed to generate AI remediation patch."));
     console.error(colors.critical(` Error: ${err?.message || err}`));
     process.exit(1);
   }

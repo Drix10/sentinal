@@ -1,8 +1,8 @@
 import readline from "node:readline/promises";
 import { stdin, stdout } from "node:process";
-import { saveApiKey } from "../core/config";
-import { validateApiKey } from "../ai/llm";
-import { colors, renderBanner } from "../ui/render";
+import { saveApiKey } from "../core/config.js";
+import { validateApiKey } from "../ai/llm.js";
+import { colors, renderBanner } from "../ui/render.js";
 
 export async function setGeminiKeyCommand() {
   renderBanner();

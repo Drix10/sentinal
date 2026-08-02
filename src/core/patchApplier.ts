@@ -43,7 +43,6 @@ export function cleanBackup(backupPath?: string) {
     try {
       fs.unlinkSync(backupPath);
     } catch {
-      // Ignore cleanup error
     }
   }
 }
@@ -79,7 +78,6 @@ export function applyPatch(
     }
 
     if (!normFileContent.includes(normOriginal)) {
-      // Fuzzy line-by-line fallback matching if exact snippet differs slightly by whitespace
       const origLines = normOriginal.split("\n").map((l) => l.trim()).filter(Boolean);
       const fileLines = normFileContent.split("\n");
 

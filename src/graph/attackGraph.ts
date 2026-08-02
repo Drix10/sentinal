@@ -1,4 +1,4 @@
-import type { KnowledgeGraph, KnowledgeNode } from "./knowledgeGraph";
+import type { KnowledgeGraph, KnowledgeNode } from "./knowledgeGraph.js";
 
 export interface ExploitPath {
   id: string;

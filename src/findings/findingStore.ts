@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import { normalizePath } from "../utils/path";
+import { normalizePath, validateProjectRelativePath } from "../utils/path.js";
 
 export type FindingSeverity = "CRITICAL" | "HIGH" | "MEDIUM" | "LOW" | "INFO";
 export type FindingStatus = "OPEN" | "IGNORED" | "FIXED";
@@ -122,14 +122,7 @@ export class FindingStore {
             item.status = "OPEN";
           }
           if (item.evidence && item.evidence.file) {
-            let rawFile = item.evidence.file;
-            const fileMatch = rawFile.match(/\b([a-zA-Z0-9_\-\/\.]+\.(?:json|tsx|jsx|yaml|env|yml|ts|js|md))\b/i);
-            if (fileMatch) {
-              rawFile = fileMatch[1];
-            } else if (!fs.existsSync(path.resolve(projectPath, rawFile))) {
-              rawFile = "package.json";
-            }
-            item.evidence.file = normalizePath(rawFile);
+            item.evidence.file = validateProjectRelativePath(projectPath, item.evidence.file);
           }
           this.findings.set(item.id, item);
           const match = item.id.match(/^FINDING-(\d+)$/);

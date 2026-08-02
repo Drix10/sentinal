@@ -1,6 +1,6 @@
 import { EventEmitter } from "node:events";
-import type { IRProject, IRRoute } from "../ir/types";
-import type { DependencyInfo, SecretFinding } from "../types";
+import type { IRProject, IRRoute } from "../ir/types.js";
+import type { DependencyInfo, SecretFinding } from "../types.js";
 
 export type SentinelEventType =
   | "project:indexed"

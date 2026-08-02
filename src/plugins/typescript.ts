@@ -1,9 +1,9 @@
 import path from "node:path";
 import fg from "fast-glob";
 import { Project, type SourceFile } from "ts-morph";
-import type { IRFile, IRProject, IRRoute } from "../ir/types";
-import { extractRoutesFromSource } from "../rules/routeParser";
-import { normalizePath } from "../utils/path";
+import type { IRFile, IRProject, IRRoute } from "../ir/types.js";
+import { extractRoutesFromSource } from "../rules/routeParser.js";
+import { normalizePath } from "../utils/path.js";
 
 export class TypeScriptPlugin {
   private projectPath: string;
@@ -71,7 +71,6 @@ export class TypeScriptPlugin {
 
         irProject.files.set(relPath, irFile);
       } catch {
-        // Skip unparseable files gracefully
       } finally {
         if (source) {
           tsProject.removeSourceFile(source);

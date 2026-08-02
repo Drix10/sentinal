@@ -25,7 +25,6 @@ export function saveApiKey(apiKey: string) {
   try {
     fs.chmodSync(CONFIG_FILE, 0o600);
   } catch {
-    // Ignore permissions error on systems where chmod is unmapped
   }
 }
 

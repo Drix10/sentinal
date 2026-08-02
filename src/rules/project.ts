@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import type { ProjectInfo } from "../types";
+import type { ProjectInfo } from "../types.js";
 
 export async function scanProject(projectPath: string): Promise<ProjectInfo> {
   const packageFile = path.join(projectPath, "package.json");
@@ -30,7 +30,6 @@ export async function scanProject(projectPath: string): Promise<ProjectInfo> {
 
       if ("typescript" in dependencies) language = "TypeScript";
     } catch {
-      // Ignore JSON parse errors
     }
   }
 

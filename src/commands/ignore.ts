@@ -1,5 +1,5 @@
-import { FindingStore } from "../findings/findingStore";
-import { colors, renderBanner } from "../ui/render";
+import { FindingStore } from "../findings/findingStore.js";
+import { colors, renderBanner } from "../ui/render.js";
 
 export async function ignoreCommand(findingId?: string, reason?: string) {
   renderBanner();

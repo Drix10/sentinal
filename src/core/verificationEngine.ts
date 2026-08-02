@@ -2,7 +2,7 @@ import { execSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { Project } from "ts-morph";
-import { scanSecrets } from "../rules/secrets";
+import { scanSecrets } from "../rules/secrets.js";
 
 export interface VerificationResult {
   passed: boolean;
@@ -17,7 +17,6 @@ export async function verifyPatchSafety(
 ): Promise<VerificationResult> {
   const targetAbsPath = path.resolve(projectPath, targetFileRel);
 
-  // STAGE 1: AST & Syntax Compilation Check
   try {
     const tsConfigFilePath = path.join(projectPath, "tsconfig.json");
     const hasTsConfig = fs.existsSync(tsConfigFilePath);
@@ -64,7 +63,6 @@ export async function verifyPatchSafety(
     };
   }
 
-  // STAGE 2: TypeScript Compiler (`tsc --noEmit`) if tsconfig.json exists
   const tsConfigPath = path.join(projectPath, "tsconfig.json");
   if (fs.existsSync(tsConfigPath)) {
     try {
@@ -86,7 +84,6 @@ export async function verifyPatchSafety(
     }
   }
 
-  // STAGE 3: Test Suite Execution if test script is defined in package.json
   const pkgPath = path.join(projectPath, "package.json");
   if (fs.existsSync(pkgPath)) {
     try {
@@ -113,7 +110,6 @@ export async function verifyPatchSafety(
     }
   }
 
-  // STAGE 4: SAST Re-scan on the target file
   try {
     const secrets = await scanSecrets(projectPath);
     const targetSecrets = secrets.filter((s) => s.file === targetFileRel);
@@ -125,7 +121,6 @@ export async function verifyPatchSafety(
       };
     }
   } catch {
-    // Non-fatal
   }
 
   return {

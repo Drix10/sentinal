@@ -1,5 +1,5 @@
 <p align="center">
-  <h1 align="center">🛡️ Sentinel AI Security Platform</h1>
+  <h1 align="center">🛡️ Sentinel AI Security CLI</h1>
 </p>
 
 <p align="center">
@@ -10,13 +10,13 @@
     <img src="https://img.shields.io/npm/v/sentinel-ai-cli?style=for-the-badge" />
     <img src="https://img.shields.io/npm/dm/sentinel-ai-cli?style=for-the-badge" />
     <img src="https://img.shields.io/badge/TypeScript-5.x-blue?style=for-the-badge" />
-    <img src="https://img.shields.io/badge/AI-Gemini_3.5_Flash-orange?style=for-the-badge" />
+    <img src="https://img.shields.io/badge/AI-Gemini_2.5_Flash-orange?style=for-the-badge" />
     <img src="https://img.shields.io/badge/Security-AI%20Powered-red?style=for-the-badge" />
     <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" />
 </p>
 
 <p align="center">
-  <b>Application Security Platform combining Deterministic AST Parsing, Knowledge/Attack Graphs, Multi-File Codebase Context, Gemini 3.5 Flash AI Reasoning, and Zero-Breakage Autonomous Patching.</b>
+  <b>Application Security CLI combining Deterministic AST Parsing, Knowledge/Attack Graphs, Multi-File Codebase Context, Gemini 2.5 Flash AI Reasoning, and Zero-Breakage Autonomous Patching.</b>
 </p>
 
 ---
@@ -25,10 +25,10 @@
 
 > Traditional security tools rely solely on superficial regex pattern matching or unguided text prompts that trigger high false-positive rates and corrupt source files when attempting fixes.
 
-> **Sentinel compiles your codebase into Sentinel IR, builds a Knowledge Graph, synthesizes multi-hop Attack Graphs, extracts deep multi-file codebase context (interfaces, exports, dependencies), performs CISO-grade reasoning powered by Gemini 3.5 Flash, and applies autonomous fixes backed by zero-breakage verification and snapshot rollback.**
+> **Sentinel compiles your codebase into Sentinel IR, builds a Knowledge Graph, synthesizes multi-hop Attack Graphs, extracts deep multi-file codebase context (interfaces, exports, dependencies), performs CISO-grade reasoning powered by Gemini 2.5 Flash, and applies autonomous fixes backed by zero-breakage verification and snapshot rollback.**
 
 ```
-Polyglot Source Code ──► Sentinel IR ──► Security Knowledge Graph ──► Attack Graph ──► Deep Multi-File Context ──► Gemini 3.5 Flash Reasoning ──► Autonomous Patching & Zero-Breakage Verification
+Polyglot Source Code ──► Sentinel IR ──► Security Knowledge Graph ──► Attack Graph ──► Deep Multi-File Context ──► Gemini 2.5 Flash Reasoning ──► Autonomous Patching & Zero-Breakage Verification
 ```
 
 ---

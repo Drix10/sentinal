@@ -1,5 +1,5 @@
-import type { Finding } from "../findings/findingStore";
-import { normalizePath } from "../utils/path";
+import type { Finding } from "../findings/findingStore.js";
+import { normalizePath } from "../utils/path.js";
 
 export interface SarifLog {
   $schema: string;
@@ -15,6 +15,7 @@ export interface SarifLog {
           name: string;
           shortDescription: { text: string };
           fullDescription: { text: string };
+          helpUri?: string;
           help: { text: string; markdown: string };
           properties: {
             tags: string[];
@@ -58,18 +59,34 @@ export function generateSarifReport(
               ? "5.0"
               : "3.0";
 
+      const tags = ["security", f.owaspCategory || "OWASP-Top10"];
+      if (f.cweId) tags.push(f.cweId);
+
+      const cweNum = f.cweId ? f.cweId.replace(/[^0-9]/g, "") : "";
+      const helpUri = cweNum ? `https://cwe.mitre.org/data/definitions/${cweNum}.html` : "https://github.com/Drix10/sentinal";
+
+      const probSev =
+        f.severity === "CRITICAL" || f.severity === "HIGH"
+          ? "error"
+          : f.severity === "MEDIUM"
+            ? "warning"
+            : "recommendation";
+
       rulesMap.set(f.ruleId, {
         id: f.ruleId,
         name: f.title,
         shortDescription: { text: f.title },
         fullDescription: { text: f.description },
+        helpUri,
         help: {
-          text: `${f.description}\n\nRecommendation: ${f.recommendation}`,
-          markdown: `### ${f.title}\n\n${f.description}\n\n**Recommendation:**\n${f.recommendation}`,
+          text: `${f.description}\n\nOWASP Category: ${f.owaspCategory || "N/A"}\nCWE: ${f.cweId || "N/A"}\nRecommendation: ${f.recommendation}`,
+          markdown: `## ${f.title}\n\n${f.description}\n\n- **OWASP Category:** ${f.owaspCategory || "N/A"}\n- **CWE:** ${f.cweId || "N/A"}\n\n### Recommendation\n${f.recommendation}`,
         },
         properties: {
-          tags: ["security", f.owaspCategory || "OWASP"],
+          tags,
           "security-severity": secSev,
+          "problem.severity": probSev,
+          precision: "very-high",
         },
       });
     }
@@ -81,7 +98,6 @@ export function generateSarifReport(
           ? "warning"
           : "note";
 
-    // Standardize URI format for GitHub Security SARIF compatibility
     let relUri = normalizePath(f.evidence.file || "package.json");
     if (relUri.startsWith("./")) relUri = relUri.slice(2);
     if (relUri.startsWith("/")) relUri = relUri.slice(1);
@@ -119,7 +135,7 @@ export function generateSarifReport(
       {
         tool: {
           driver: {
-            name: "Sentinel AI Security Platform",
+            name: "Sentinel AI Security CLI",
             version,
             informationUri: "https://github.com/Drix10/sentinal",
             rules: Array.from(rulesMap.values()),

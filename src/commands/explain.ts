@@ -2,13 +2,14 @@ import chalk from "chalk";
 import ora from "ora";
 import path from "node:path";
 import fs from "node:fs";
-import { FindingStore } from "../findings/findingStore";
-import { generateExplainReport } from "../ai/llm";
-import { extractDeepCodebaseContext } from "../ai/codebaseContext";
-import { colors, renderBanner, renderBox } from "../ui/render";
+import { FindingStore } from "../findings/findingStore.js";
+import { generateExplainReport } from "../ai/llm.js";
+import { extractDeepCodebaseContext } from "../ai/codebaseContext.js";
+import { colors, renderBanner, renderBox } from "../ui/render.js";
+import { animateBanner, animateAiSynthesis } from "../ui/animation.js";
 
 export async function explainCommand(findingId?: string) {
-  renderBanner();
+  await animateBanner();
 
   if (!findingId) {
     console.log(colors.critical(" ✖ Error: Finding ID required."));
@@ -44,16 +45,12 @@ export async function explainCommand(findingId?: string) {
   }
 
   const deepContext = extractDeepCodebaseContext(projectPath, finding.evidence.file);
-  const spinner = ora(colors.brand(`Analyzing finding ${finding.id} with deep AI reasoning...`)).start();
 
   try {
-    const explainData = await generateExplainReport(
-      finding,
-      fileContent,
-      deepContext.formattedContext,
+    const explainData = await animateAiSynthesis(
+      `Analyzing finding ${finding.id} with deep AI reasoning...`,
+      () => generateExplainReport(finding, fileContent, deepContext.formattedContext)
     );
-    spinner.succeed(colors.low(`Vulnerability explanation synthesized for ${finding.id}`));
-    console.log();
 
     const severityColor =
       finding.severity === "CRITICAL"
@@ -109,7 +106,6 @@ export async function explainCommand(findingId?: string) {
     console.log(colors.brand(` To generate an autonomous code patch, run:`));
     console.log(colors.white(`   sentinel fix ${finding.id}\n`));
   } catch (err: any) {
-    spinner.fail(colors.critical("Failed to synthesize AI explanation."));
     console.error(colors.critical(` Error: ${err?.message || err}`));
     process.exit(1);
   }

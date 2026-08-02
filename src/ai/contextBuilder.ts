@@ -1,4 +1,4 @@
-import { normalizePath } from "../utils/path";
+import { normalizePath } from "../utils/path.js";
 
 export interface SecurityContext {
   projectOverview: string;
@@ -8,6 +8,21 @@ export interface SecurityContext {
   criticalRoutes: string[];
   dependencyRiskSummary: string[];
   formattedContextPrompt: string;
+}
+
+const MAX_CONTEXT_CHARACTERS = 100000;
+
+export function truncateContextSafely(promptText: string, maxChars = MAX_CONTEXT_CHARACTERS): string {
+  if (maxChars <= 0) return "";
+  if (promptText.length <= maxChars) return promptText;
+
+  const notice = "\n\n... [SENTINEL CONTEXT BUDGET CEILING EXCEEDED: REMAINING AST DATA TRUNCATED SAFELY] ...\n";
+  if (maxChars <= notice.length) {
+    return notice.slice(0, maxChars);
+  }
+
+  const cutoff = maxChars - notice.length;
+  return promptText.slice(0, cutoff) + notice;
 }
 
 export function buildSecurityContext(analysis: any): SecurityContext {
@@ -46,7 +61,7 @@ export function buildSecurityContext(analysis: any): SecurityContext {
 
   const attackSurfaceSummary = `Identified ${routes.length} HTTP API endpoints, ${secrets.length} hardcoded secret patterns, ${prodDeps.length} runtime dependencies, and ${exploitPaths.length} multi-hop attack graph exploit vectors.`;
 
-  const formattedContextPrompt = `
+  const rawFormattedPrompt = `
 ══════════════════════════════════════════════════════════════════════
 SENTINEL HIGH-DENSITY SECURITY CONTEXT PAYLOAD
 ══════════════════════════════════════════════════════════════════════
@@ -86,6 +101,8 @@ ${
 }
 ══════════════════════════════════════════════════════════════════════
 `;
+
+  const formattedContextPrompt = truncateContextSafely(rawFormattedPrompt);
 
   return {
     projectOverview,

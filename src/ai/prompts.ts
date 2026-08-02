@@ -1,10 +1,6 @@
 import { SchemaType, type ResponseSchema } from "@google/generative-ai";
-import type { Finding } from "../findings/findingStore";
-import { buildSecurityContext } from "./contextBuilder";
-
-// ==========================================
-// GEMINI STRUCTURED OUTPUT SCHEMAS
-// ==========================================
+import type { Finding } from "../findings/findingStore.js";
+import { buildSecurityContext } from "./contextBuilder.js";
 
 export const securityReportSchema: ResponseSchema = {
   type: SchemaType.OBJECT,
@@ -102,10 +98,6 @@ export const fixPatchSchema: ResponseSchema = {
     "securityAssurance",
   ],
 };
-
-// ==========================================
-// SYSTEM PROMPTS (OFFENSIVE & DEFENSIVE APPSEC)
-// ==========================================
 
 export function buildSecurityPrompt(analysis: any): string {
   const context = buildSecurityContext(analysis);

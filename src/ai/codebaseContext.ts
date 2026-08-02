@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { normalizePath } from "../utils/path";
+import { normalizePath } from "../utils/path.js";
 
 export interface LocalModuleContext {
   importPath: string;
@@ -36,7 +36,6 @@ export function extractDeepCodebaseContext(
   const importedModules: LocalModuleContext[] = [];
   const dirOfTarget = path.dirname(targetAbsPath);
 
-  // Extract ES import, require, and dynamic import statements
   const importRegex = /(?:import|from|require)\s*\(?\s*['"](\.[^'"]+)['"]/g;
   let match: RegExpExecArray | null;
 
@@ -45,8 +44,12 @@ export function extractDeepCodebaseContext(
     ? resolvedProjectPath
     : resolvedProjectPath + path.sep;
 
+  const seenModules = new Set<string>();
+
   while ((match = importRegex.exec(targetFileContent)) !== null) {
     const importSpecifier = match[1];
+    if (seenModules.has(importSpecifier)) continue;
+    seenModules.add(importSpecifier);
     const extensionsToTry = [
       "",
       ".ts",
@@ -78,7 +81,6 @@ export function extractDeepCodebaseContext(
       let snippet = "";
       try {
         const fullContent = fs.readFileSync(resolvedAbsPath, "utf8");
-        // Keep top 60 lines (types, exports, signatures) to avoid excessive prompt bloat
         snippet = fullContent.split("\n").slice(0, 60).join("\n");
       } catch {
         snippet = "// Could not read module";
@@ -96,7 +98,6 @@ export function extractDeepCodebaseContext(
     }
   }
 
-  // Extract package.json dependencies
   const packageDependencies: string[] = [];
   const pkgPath = path.join(projectPath, "package.json");
   if (fs.existsSync(pkgPath)) {
@@ -110,7 +111,6 @@ export function extractDeepCodebaseContext(
         packageDependencies.push(`${name}@${version}`);
       }
     } catch {
-      // Ignore unparseable package.json
     }
   }
 

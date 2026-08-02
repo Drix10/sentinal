@@ -1,6 +1,6 @@
 import chalk from "chalk";
 import path from "node:path";
-import { normalizePath } from "../utils/path";
+import { normalizePath } from "../utils/path.js";
 
 export const colors = {
   brand: chalk.hex("#00F5FF").bold,
@@ -76,7 +76,7 @@ export function renderBanner() {
   console.log(
     colors.brand(`
  ╔══════════════════════════════════════════════════════════════════════╗
- ║      S E N T I N E L   A I   S E C U R I T Y   P L A T F O R M       ║
+ ║         S E N T I N E L   A I   S E C U R I T Y   C L I              ║
  ║      Deterministic Program Analysis • Attack Graph • AI Reasoning    ║
  ╚══════════════════════════════════════════════════════════════════════╝
 `),

@@ -2,23 +2,26 @@
 import "dotenv/config";
 import path from "node:path";
 import fs from "node:fs";
+import { fileURLToPath } from "node:url";
 import { Command } from "commander";
-import { attackCommand } from "./commands/attack";
-import { setGeminiKeyCommand } from "./commands/set-key";
-import { explainCommand } from "./commands/explain";
-import { fixCommand } from "./commands/fix";
-import { ignoreCommand } from "./commands/ignore";
-import { doctorCommand } from "./commands/doctor";
-import { checkUpdateNotifier } from "./utils/updateNotifier";
+import { attackCommand } from "./commands/attack.js";
+import { setGeminiKeyCommand } from "./commands/set-key.js";
+import { explainCommand } from "./commands/explain.js";
+import { fixCommand } from "./commands/fix.js";
+import { ignoreCommand } from "./commands/ignore.js";
+import { doctorCommand } from "./commands/doctor.js";
+import { checkUpdateNotifier } from "./utils/updateNotifier.js";
+import { colors } from "./ui/render.js";
 
-// Handle SIGINT (Ctrl+C) gracefully
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 process.on("SIGINT", () => {
   console.log("\n\x1b[33m ⚠️ Operation cancelled by user.\x1b[0m\n");
   process.exit(0);
 });
 
-// Read version dynamically from package.json
-let cliVersion = "1.0.7";
+let cliVersion = "1.0.8";
 try {
   const pkgPath = path.join(__dirname, "../package.json");
   if (fs.existsSync(pkgPath)) {
@@ -26,30 +29,49 @@ try {
     cliVersion = pkg.version || cliVersion;
   }
 } catch {
-  // Fallback version
 }
 
 const program = new Command();
 
 program
   .name("sentinel")
-  .description("Sentinel Platform CLI for security scanning, AI reasoning, and zero-breakage autonomous patching")
-  .version(cliVersion);
+  .description("Sentinel CLI for security scanning, AI reasoning, and zero-breakage autonomous patching")
+  .version(cliVersion)
+  .option("-q, --quiet", "Suppress non-essential console output")
+  .option("-v, --verbose", "Enable verbose debug output")
+  .option("--no-banner", "Suppress ASCII banner")
+  .hook("preAction", async () => {
+    await checkUpdateNotifier(cliVersion);
+  });
+
+async function handleCliAction(actionFn: () => Promise<void>) {
+  try {
+    await actionFn();
+  } catch (err: any) {
+    console.error("\n" + colors.critical(` ✖ Execution Error: ${err?.message || err}`));
+    if (process.env.DEBUG || process.argv.includes("--verbose") || process.argv.includes("-v")) {
+      console.error(colors.gray(err?.stack || ""));
+    }
+    process.exit(1);
+  }
+}
 
 program
   .command("set-key")
   .description("Configure Gemini API Key")
   .action(async () => {
-    await checkUpdateNotifier(cliVersion);
-    await setGeminiKeyCommand();
+    await handleCliAction(async () => {
+      await setGeminiKeyCommand();
+    });
   });
 
 program
   .command("doctor [target]")
   .description("Run system environment and security configuration diagnostic checks")
   .action(async (target?: string) => {
-    await checkUpdateNotifier(cliVersion);
-    await doctorCommand(target);
+    await handleCliAction(async () => {
+      await doctorCommand(target);
+    });
   });
 
 program
@@ -58,16 +80,18 @@ program
   .option("-f, --format <format>", "Output format (table, json, sarif)", "table")
   .option("-o, --output <path>", "Output report file path")
   .action(async (target: string | undefined, options: { format?: string; output?: string }) => {
-    await checkUpdateNotifier(cliVersion);
-    await attackCommand(target, options);
+    await handleCliAction(async () => {
+      await attackCommand(target, options);
+    });
   });
 
 program
   .command("explain <findingId>")
   .description("Display deep OWASP/CWE analysis and source code evidence for a finding")
   .action(async (findingId: string) => {
-    await checkUpdateNotifier(cliVersion);
-    await explainCommand(findingId);
+    await handleCliAction(async () => {
+      await explainCommand(findingId);
+    });
   });
 
 program
@@ -76,8 +100,9 @@ program
   .option("--dry-run", "Preview AI patch diff without physically modifying disk files")
   .option("--no-verify", "Skip compiler and test runner verification pipeline")
   .action(async (findingId: string, options: { dryRun?: boolean; verify?: boolean }) => {
-    await checkUpdateNotifier(cliVersion);
-    await fixCommand(findingId, options);
+    await handleCliAction(async () => {
+      await fixCommand(findingId, options);
+    });
   });
 
 program
@@ -85,8 +110,9 @@ program
   .description("Mark a finding as ignored with optional reason")
   .option("-r, --reason <reason>", "Reason for ignoring finding")
   .action(async (findingId: string, options: { reason?: string }) => {
-    await checkUpdateNotifier(cliVersion);
-    await ignoreCommand(findingId, options.reason);
+    await handleCliAction(async () => {
+      await ignoreCommand(findingId, options.reason);
+    });
   });
 
 program.parseAsync(process.argv);

@@ -1,12 +1,13 @@
 import path from "node:path";
 import fs from "node:fs";
 import ora from "ora";
-import { hasApiKey } from "../core/config";
-import { runAttack } from "../core/orchestrator";
-import { colors, renderBanner } from "../ui/render";
+import { hasApiKey } from "../core/config.js";
+import { runAttack } from "../core/orchestrator.js";
+import { colors, renderBanner } from "../ui/render.js";
+import { animateBanner } from "../ui/animation.js";
 
 export async function attackCommand(target?: string, options?: { format?: string; output?: string }) {
-  renderBanner();
+  await animateBanner();
 
   if (!hasApiKey()) {
     console.log(colors.critical(" ✖ Gemini API Key not configured.\n"));
@@ -35,5 +36,10 @@ export async function attackCommand(target?: string, options?: { format?: string
   console.log(colors.brand(` Target: ${projectPath}\n`));
   const spinner = ora(colors.brand("Starting attack analysis pipeline...")).start();
 
-  await runAttack(projectPath, spinner, options);
+  try {
+    await runAttack(projectPath, spinner, options);
+  } catch (err) {
+    spinner.fail(colors.critical("Attack analysis pipeline encountered an error."));
+    throw err;
+  }
 }

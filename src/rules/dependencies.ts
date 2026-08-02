@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import type { DependencyInfo } from "../types";
+import type { DependencyInfo } from "../types.js";
 
 export async function scanDependencies(
   projectPath: string,
@@ -33,7 +33,6 @@ export async function scanDependencies(
 
     dependencies.sort((a, b) => a.name.localeCompare(b.name));
   } catch {
-    // Ignore malformed JSON package files gracefully
   }
 
   return dependencies;

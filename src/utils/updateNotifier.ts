@@ -5,7 +5,7 @@ import os from "node:os";
 import chalk from "chalk";
 
 const CACHE_FILE = path.join(os.homedir(), ".sentinel", "update_cache.json");
-const CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
+const CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000;
 
 interface CacheData {
   lastChecked: number;
@@ -48,7 +48,6 @@ export async function checkUpdateNotifier(currentVersion: string): Promise<void>
       return;
     }
 
-    // Awaitable promise that consumes non-200 responses and handles errors/timeouts safely
     await new Promise<void>((resolve) => {
       let settled = false;
       const done = () => {
@@ -63,7 +62,7 @@ export async function checkUpdateNotifier(currentVersion: string): Promise<void>
         { headers: { "User-Agent": "sentinel-ai-cli" }, timeout: 1500 },
         (res) => {
           if (res.statusCode !== 200) {
-            res.resume(); // consume response stream so socket releases
+            res.resume();
             done();
             return;
           }
@@ -82,7 +81,6 @@ export async function checkUpdateNotifier(currentVersion: string): Promise<void>
                 }
               }
             } catch {
-              // Ignore parse errors
             } finally {
               done();
             }
@@ -99,7 +97,6 @@ export async function checkUpdateNotifier(currentVersion: string): Promise<void>
       });
     });
   } catch {
-    // Ignore notification errors silently
   }
 }
 
